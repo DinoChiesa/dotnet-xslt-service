@@ -1,0 +1,80 @@
+Wednesday, 11 December 2024, 01:55
+
+A demonstration of .NET/C# hosting the Microsoft XSLTransform class.
+Prior to .NET 5, it was possible to use C# code directly in the XSL sheet.
+Microsoft changed this with .NET Core and subsequent to .NET 5, removing that
+capability.
+
+When you try to use it you will get a runtime error, something like this:
+
+Unhandled exception. System.Xml.Xsl.XslLoadException: XSLT compile error. An error occurred at calc.xsl, (4, 56). ---> System.PlatformNotSupportedException: Compiling JScript/CSharp scripts is not supported
+
+
+The closest replacement is something called an "Extension object" which you must
+reference in the XSL differently than script.  The Extension object must be
+provided when the XslTransform is instantiated.
+
+
+See https://learn.microsoft.com/en-us/dotnet/api/system.xml.xsl.xsltargumentlist.addextensionobject?view=net-8.0
+
+
+
+to build
+
+  dotnet add package cmdwtf.BuildTimestampGenerator --version 1.0.1
+  dotnet build
+
+to run
+
+  dotnet run
+
+
+to invoke
+
+  # request xform
+  curl -i -X POST  -H content-type:application/xml  0:9090/xml --data-binary @xmldochere
+
+
+to deploy:
+  ./deploy.sh
+
+
+Or do all these manual steps:
+    # To publish or re-publish  on cloud run
+    PROJECT=dchiesa-argolis-2
+
+    # set project
+    gcloud config set core/project $PROJECT
+
+    # verify project
+    gcloud config get-value core/project
+
+    SERVICE_ACCOUNT=xslt-service
+    # this is a one time thing
+    gcloud iam service-accounts create "${SERVICE_ACCOUNT}"
+
+    REGION=us-west1
+    SA_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"
+    SERVICE=xslt-service
+
+    gcloud run deploy "${SERVICE}" \
+      --source . \
+      --project "${PROJECT}" \
+      --concurrency 5 \
+      --cpu 1 \
+      --memory '256Mi' \
+      --min-instances 0 \
+      --max-instances 1 \
+      --allow-unauthenticated \
+      --region "${REGION}" \
+      --service-account "${SA_EMAIL}" \
+      --timeout 300
+
+
+# after startup, available at:
+
+   https://xslt-service-511582533367.us-west1.run.app
+
+to invoke:
+
+  ./sendOne.sh
