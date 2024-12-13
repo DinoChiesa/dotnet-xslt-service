@@ -12,3 +12,5 @@ obj
 deploy.sh
 sendOne.sh
 env.sh
+
+.remote-endpoint-*
