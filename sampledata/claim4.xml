@@ -1,0 +1,12 @@
+<claims>
+  <claim>
+    <procedureCode>142007</procedureCode>
+    <patientId>ABC-123</patientId>
+    <amount>362.92</amount>
+  </claim>
+  <claim>
+    <procedureCode>166001</procedureCode>
+    <patientId>PSS-3823</patientId>
+    <amount>120.12</amount>
+  </claim>
+</claims>

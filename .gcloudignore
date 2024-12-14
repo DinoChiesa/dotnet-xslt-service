@@ -14,3 +14,5 @@ sendOne.sh
 env.sh
 
 .remote-endpoint-*
+
+sampledata

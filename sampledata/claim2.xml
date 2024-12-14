@@ -1,0 +1,7 @@
+<claims>
+  <claim>
+    <procedureCode>142007</procedureCode>
+    <patientId>ABC-123</patientId>
+    <amount>287.05</amount>
+  </claim>
+</claims>

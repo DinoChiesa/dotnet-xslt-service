@@ -71,10 +71,24 @@ Or do all these manual steps:
       --timeout 300
 
 
-# after startup, available at:
+# after startup, available at "something like" this:
 
-   https://xslt-service-511582533367.us-west1.run.app
+  https://xslt-service-511582533367.us-west1.run.app
+
+# retrieve the location like this:
+
+  gcloud run services describe "${SERVICE}" \
+     --region "${REGION}" --project="${PROJECT}" \
+     --format 'value(status.url)'
+
 
 to invoke:
 
   ./sendOne.sh
+
+
+When this service calls out to the rules engine, it needs to do so via the VPC
+
+https://codelabs.developers.google.com/codelabs/how-to-configure-cloud-run-service-direct-vpc-egress#2
+
+

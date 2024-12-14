@@ -1,8 +1,22 @@
+// Copyright © 2024 Google LLC.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
 using System;
 using System.IO;
 using System.Text;
 using System.Xml;
-using System.Xml.Serialization;
 using System.Xml.XPath;
 using System.Xml.Xsl;
 
@@ -31,6 +45,12 @@ namespace XsltEngineDemo
                 );
                 Console.Error.WriteLine($"Build time: {buildTime}");
 
+                // Disable QUIC / H3 (apparently not permitted in Cloud run)l
+                //
+                // It seems like .NET 8 or .NET 9 has HTTP/3 enabled as a
+                // default whereas Cloud Run supports HTTP/1 or HTTP/2 only.
+                AppContext.SetSwitch("System.Net.SocketsHttpHandler.Http3Support", false);
+
                 // Compile the style sheet
                 XsltSettings xsltSettings = new XsltSettings();
                 xsltSettings.EnableScript = true;
@@ -47,21 +67,24 @@ namespace XsltEngineDemo
                 );
 
                 if (files == null || files.Length == 0)
-                    throw new Exception("Stylesheet not found.");
+                    throw new FileNotFoundException("Stylesheet not found.");
 
-                //string fullPath = Path.GetFullPath(stylesheet);
                 xslt.Load(files[0], xsltSettings, new XmlUrlResolver());
-
-                // Create an XsltArgumentList, to Add an object to the XSLT
-                XsltArgumentList xslArglist = new XsltArgumentList();
-                ExtObject obj = new ExtObject();
-                xslArglist.AddExtensionObject("urn:extension1", obj);
 
                 // create the web app
                 var builder = WebApplication.CreateBuilder(args);
+                var claimsServiceUri =
+                    builder.Configuration.GetValue<String>("ClaimsServiceUri")
+                    ?? throw new Exception("missing ClaimsServiceUri");
+
+                // An XsltArgumentList allows us to make an object accessible to the XSLT.
+                XsltArgumentList xslArglist = new XsltArgumentList();
+                ExtObject obj = new ExtObject(claimsServiceUri);
+                xslArglist.AddExtensionObject("urn:extension1", obj);
+
                 var app = builder.Build();
 
-                // inject a response header containing the build time
+                // Always inject a response header containing the build time.
                 app.Use(
                     async (context, next) =>
                     {
@@ -99,17 +122,25 @@ namespace XsltEngineDemo
                             xmldoc.LoadXml(rawContent);
                             XPathDocument doc = new XPathDocument(new XmlNodeReader(xmldoc));
 
-                            // Create an XmlWriter
-                            XmlWriterSettings settings = new XmlWriterSettings();
-                            settings.OmitXmlDeclaration = true;
-                            settings.Indent = true;
+                            // // reload the XSLT every time - during test + development
+                            // xslt.Load(files[0], xsltSettings, new XmlUrlResolver());
 
-                            using (TextWriter textWriter = new Utf8StringWriter())
+                            // Create an XmlWriter with the right indentation settings
+                            XmlWriterSettings xmlWriterSettings = new XmlWriterSettings()
                             {
-                                using (XmlWriter xmlWriter = XmlWriter.Create(textWriter, settings))
+                                IndentChars = "  ",
+                                OmitXmlDeclaration = true,
+                                Indent = true,
+                            };
+
+                            using (var textWriter = new Utf8StringWriter())
+                            {
+                                using (
+                                    var xmlWriter = XmlWriter.Create(textWriter, xmlWriterSettings)
+                                )
                                 {
                                     // Execute the transformation
-                                    xslt.Transform(doc, xslArglist, textWriter);
+                                    xslt.Transform(doc, xslArglist, xmlWriter);
                                     textWriter.Flush();
                                     rawContent = textWriter.ToString() ?? string.Empty;
                                 }
