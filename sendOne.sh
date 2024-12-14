@@ -25,7 +25,12 @@ getRandomContentFile() {
   json_dir="./sampledata"
 
   # Find all JSON files in the directory
-  data_files=("$json_dir"/*.xml)
+  data_files=(${json_dir}/${DATAKEY}*.xml)
+
+  if [[ ${#data_files[@]} -eq 0 ]]; then
+    printf "Cannot find any files to send.\n"
+    exit 1
+  fi
 
   # Get a random file
   random_file="${data_files[$((RANDOM % ${#data_files[@]}))]}"

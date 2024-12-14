@@ -31,47 +31,21 @@ to run
 
 to invoke
 
-  # request xform
+  # request transform
   curl -i -X POST  -H content-type:application/xml  0:9090/xml --data-binary @xmldochere
 
+  # request reload of XSL
+  curl -i -X POST  -H content-type:application/json  0:9090/reload -d {}
 
-to deploy:
+  # read the current XSL
+  curl -i -X GET  -H content-type:application/json  0:9090/xsl
+
+
+to deploy into Cloud Run:
   ./deploy.sh
 
 
-Or do all these manual steps:
-    # To publish or re-publish  on cloud run
-    PROJECT=dchiesa-argolis-2
-
-    # set project
-    gcloud config set core/project $PROJECT
-
-    # verify project
-    gcloud config get-value core/project
-
-    SERVICE_ACCOUNT=xslt-service
-    # this is a one time thing
-    gcloud iam service-accounts create "${SERVICE_ACCOUNT}"
-
-    REGION=us-west1
-    SA_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"
-    SERVICE=xslt-service
-
-    gcloud run deploy "${SERVICE}" \
-      --source . \
-      --project "${PROJECT}" \
-      --concurrency 5 \
-      --cpu 1 \
-      --memory '256Mi' \
-      --min-instances 0 \
-      --max-instances 1 \
-      --allow-unauthenticated \
-      --region "${REGION}" \
-      --service-account "${SA_EMAIL}" \
-      --timeout 300
-
-
-# after startup, available at "something like" this:
+# after startup, the service available at "something like" this:
 
   https://xslt-service-511582533367.us-west1.run.app
 
@@ -82,13 +56,37 @@ Or do all these manual steps:
      --format 'value(status.url)'
 
 
-to invoke:
+helper scripts:
 
-  ./sendOne.sh
+  deploy.sh - deploy/re-deploy this service to Cloud Run (and provision GCS, etc)
+
+  sendOne.sh - send a randomly-selected contrived XML file into the XSLT service.
+
+  sendCircle.sh - wrapper on sendOne.  It selects only from circle XMLs to send to the service.
+
+  sendClaim.sh - wrapper on sendOne.  It selects only from claim XMLs to send to the service.
+
+  setSheet.sh - set a different stylesheet into the service (1, 2, ...)
+     Look in ./sheets for the sets of rules.  There are different XSLs to handle
+     different XMLs. If you set the 2.xsl as the sheet, then send a circle XML
+     to the service, it will return "<none/>".  Likewise if you set the 1.xsl as
+     the sheet, then send a claim XML to the service, it will return "<none/>".
 
 
-When this service calls out to the rules engine, it needs to do so via the VPC
+To use sendClaim.sh with the remote server:
+  ./setSheet.sh  2
+  ./sendClaim.sh
 
-https://codelabs.developers.google.com/codelabs/how-to-configure-cloud-run-service-direct-vpc-egress#2
+To use sendClaim.sh with a local server:
+  TARGET=local ./setSheet.sh  2
+  TARGET=local ./sendClaim.sh
+
+To use sendCircle.sh with a local server:
+  TARGET=local ./setSheet.sh  1
+  TARGET=local ./sendCircle.sh
+
+
+Note: When processing a claim XML, This service calls out to the rules engine. It
+reads the URL from appsettings.json .
 
 

@@ -98,6 +98,15 @@ namespace XsltEngineDemo
                     }
                 );
 
+                app.MapGet(
+                    "/xsl",
+                    (HttpRequest request) =>
+                    {
+                        var fileData = File.ReadAllText(files[0]);
+                        return Results.Text(fileData);
+                    }
+                );
+
                 app.MapPost(
                     "/xml",
                     async (HttpRequest Request) =>
@@ -152,6 +161,16 @@ namespace XsltEngineDemo
                             Console.Error.WriteLine(e1.ToString());
                             return Results.BadRequest();
                         }
+                    }
+                );
+
+                app.MapPost(
+                    "/reload",
+                    () =>
+                    {
+                        // If this fails (for example due to bad XSL), the call
+                        // will return 500 with an exception stacktrace.
+                        xslt.Load(files[0], xsltSettings, new XmlUrlResolver());
                     }
                 );
 

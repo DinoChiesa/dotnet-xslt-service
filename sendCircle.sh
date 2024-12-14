@@ -1,0 +1,1 @@
+DATAKEY=circle ./sendOne.sh

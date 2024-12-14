@@ -20,6 +20,18 @@ source ./env.sh
 
 OUTFILE=$(mktemp /tmp/rules-engine-deploy.out.XXXXXX)
 
+SA_REQUIRED_ROLES=("roles/storage.objectViewer" "roles/storage.objectCreator" "roles/storage.objectUser")
+
+check_and_maybe_create_gcs_bucket() {
+  printf "Checking GCS bucket (%s)...\n" "gs://${BUCKET_NAME}"
+  if gcloud storage buckets describe "gs://${BUCKET_NAME}" --format="json(name)" --project="$PROJECT" --quiet >"$OUTFILE" 2>&1; then
+    printf "That bucket already exists.\n"
+  else
+    printf "Creating the bucket...\n"
+    gcloud storage buckets create "gs://${BUCKET_NAME}" --default-storage-class="standard" --location="${REGION}" --project="$PROJECT" --quiet >"$OUTFILE" 2>&1
+  fi
+}
+
 clean_files() {
   rm -f *.*~
   rm -fr bin
@@ -82,15 +94,26 @@ clean_files
 
 check_and_maybe_create_sa
 
+check_and_maybe_create_gcs_bucket
+
+grant_roles_to_sa_on_gcs_bucket
+
+gcloud storage cp ./sheets/1.xsl "gs://${BUCKET_NAME}/stylesheet1.xsl" --project="$PROJECT"
+
+# Note: if mounting filesystems, such as GCS buckets, This implies the gen2
+# runtime.  And in that case, must specify 512Mi memory minimum,
 gcloud run deploy "${SERVICE}" \
   --source . \
   --project "${PROJECT}" \
   --concurrency 5 \
   --cpu 1 \
-  --memory '256Mi' \
+  --memory '512Mi' \
   --min-instances 0 \
   --max-instances 1 \
   --allow-unauthenticated \
   --region "${REGION}" \
   --service-account "${SA_EMAIL}" \
-  --timeout 300
+  --timeout 300 \
+  --set-env-vars "APP_CONFIG=/mnt/mounted-config" \
+  --add-volume "name=volume_config,type=cloud-storage,bucket=${BUCKET_NAME}" \
+  --add-volume-mount "volume=volume_config,mount-path=/mnt/mounted-config"

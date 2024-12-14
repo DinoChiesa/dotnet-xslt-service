@@ -101,7 +101,9 @@ namespace XsltEngineDemo
                 XmlElement root = doc.CreateElement("result");
                 root.InnerXml = responseContent;
                 doc.AppendChild(root);
-                return doc.CreateNavigator().Select("result/*");
+                var nav = doc.CreateNavigator() ?? throw new Exception("cannot create Navigator");
+
+                return nav.Select("result/*");
             }
         }
     }
