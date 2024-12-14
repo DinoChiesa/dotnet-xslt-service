@@ -89,6 +89,12 @@ namespace XsltEngineDemo
                         context.Response.OnStarting(() =>
                         {
                             context.Response.Headers.Append("Build-Time", buildTime);
+                            context.Response.Headers.Append(
+                                "service",
+                                (Environment.GetEnvironmentVariable("K_REVISION") != null)
+                                    ? $"{Environment.GetEnvironmentVariable("K_REVISION")}"
+                                    : "xslt-service"
+                            );
                             return Task.CompletedTask;
                         });
 
@@ -194,7 +200,7 @@ namespace XsltEngineDemo
                     ? "Remote"
                     : "Local";
             string? uri =
-                ((String)(section[subkey]))
+                section[subkey]
                 ?? throw new Exception("Missing Local configuration in appsettings.json");
             Console.WriteLine($"using Claims Service URI: {uri}");
             return uri;
