@@ -73,9 +73,7 @@ namespace XsltEngineDemo
 
                 // create the web app
                 var builder = WebApplication.CreateBuilder(args);
-                var claimsServiceUri =
-                    builder.Configuration.GetValue<String>("ClaimsServiceUri")
-                    ?? throw new Exception("missing ClaimsServiceUri");
+                var claimsServiceUri = getClaimsServiceUri(builder);
 
                 // An XsltArgumentList allows us to make an object accessible to the XSLT.
                 XsltArgumentList xslArglist = new XsltArgumentList();
@@ -131,9 +129,6 @@ namespace XsltEngineDemo
                             xmldoc.LoadXml(rawContent);
                             XPathDocument doc = new XPathDocument(new XmlNodeReader(xmldoc));
 
-                            // // reload the XSLT every time - during test + development
-                            // xslt.Load(files[0], xsltSettings, new XmlUrlResolver());
-
                             // Create an XmlWriter with the right indentation settings
                             XmlWriterSettings xmlWriterSettings = new XmlWriterSettings()
                             {
@@ -182,6 +177,27 @@ namespace XsltEngineDemo
             {
                 Console.Error.WriteLine(e.ToString());
             }
+        }
+
+        private static String getClaimsServiceUri(WebApplicationBuilder builder)
+        {
+            var section =
+                builder.Configuration.GetSection("ClaimsServiceUri")
+                ?? throw new Exception(
+                    "Missing ClaimsServiceUri configuration in appsettings.json"
+                );
+            var subkey =
+                (
+                    Environment.GetEnvironmentVariable("K_SERVICE") != null
+                    && Environment.GetEnvironmentVariable("K_REVISION") != null
+                )
+                    ? "Remote"
+                    : "Local";
+            string? uri =
+                ((String)(section[subkey]))
+                ?? throw new Exception("Missing Local configuration in appsettings.json");
+            Console.WriteLine($"using Claims Service URI: {uri}");
+            return uri;
         }
     }
 }
