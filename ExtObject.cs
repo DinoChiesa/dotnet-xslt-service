@@ -46,13 +46,15 @@ namespace XsltEngineDemo
             return DateTime.UtcNow.ToString("s", System.Globalization.CultureInfo.InvariantCulture);
         }
 
-        // Return XPathNodeIterator with a node set.
-        // https://learn.microsoft.com/en-us/previous-versions/bb986125(v=msdn.10)?redirectedfrom=MSDN
+        /**
+         * Call out to the remote Rules Engine.
+         * Return XPathNodeIterator with a node set.
+         * see https://learn.microsoft.com/en-us/previous-versions/bb986125(v=msdn.10)?redirectedfrom=MSDN
+         ***/
         public XPathNodeIterator ProcessClaim(String procedureCode, Double amount, String patientId)
         {
             var payload = new Claim(patientId, amount, procedureCode);
 
-            // call out to the remote Rules Engine.
             using (var client = new HttpClient())
             {
                 var request = new HttpRequestMessage()
@@ -66,7 +68,7 @@ namespace XsltEngineDemo
                     JsonSerializer.Serialize(payload),
                     Encoding.UTF8,
                     "application/json"
-                ); //CONTENT-TYPE header
+                );
 
                 var response = client.Send(request);
                 var responseContent = response.Content.ReadAsStringAsync().Result;
@@ -94,7 +96,7 @@ namespace XsltEngineDemo
                     xmlns.Add("", "");
                     xmlSerializer.Serialize(textWriter, processedClaim, xmlns);
                     responseContent = textWriter.ToString();
-                    Console.WriteLine($" xml content: {responseContent}");
+                    //Console.WriteLine($" xml content: {responseContent}");
                 }
 
                 XmlDocument doc = new XmlDocument();
