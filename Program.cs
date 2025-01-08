@@ -45,10 +45,12 @@ namespace XsltEngineDemo
                 );
                 Console.Error.WriteLine($"Build time: {buildTime}");
 
-                // Disable QUIC / H3 (apparently not permitted in Cloud run)l
+                // Disable QUIC / H3 (apparently not permitted in Cloud run)
                 //
                 // It seems like .NET 8 or .NET 9 has HTTP/3 enabled as a
                 // default whereas Cloud Run supports HTTP/1 or HTTP/2 only.
+                //
+                // refer to: https://github.com/dotnet/runtime/issues/94794
                 AppContext.SetSwitch("System.Net.SocketsHttpHandler.Http3Support", false);
 
                 // Compile the style sheet
