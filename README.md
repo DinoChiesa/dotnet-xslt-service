@@ -99,26 +99,25 @@ something similar. The XSLT is like so:
 </xsl:stylesheet>
 ```
 
-But in this case, the C# code is independent:
+But in this case, the C# code is managed in an independent module:
 
 ```
-namespace XsltEngineDemo
+namespace XsltEngineDemo;
+
+public class ExtObject
 {
-    public class ExtObject
+    public double Circumference(double radius)
     {
-        public double Circumference(double radius)
-        {
-            // perform a local calculation.
-            double pi = 3.14159;
-            double circ = pi * radius * 2;
-            return circ;
-        }
+        // perform a local calculation.
+        double pi = 3.14159;
+        double circ = pi * radius * 2;
+        return circ;
     }
 }
 ```
 
-And to use that code, you need to execute the transform with a reference to that
-C# object:
+And to use that code, you need to refer to an instance of that object when you execute the transform:
+
 ```
       XslCompiledTransform xslt = new XslCompiledTransform();
       xslt.Load(xsltFilename, null /* xsltSettings */, new XmlUrlResolver());
@@ -132,6 +131,26 @@ C# object:
           xslt.Transform(doc, xslArglist, xmlWriter);
 ```      
 
+This repo shows a variety of options for demonstrating this capability.
+
+## Demonstrations included here
+
+There are three distinct demonstrations included here, of XSLT that call out to
+an extension object defined in C#:
+
+- [circle](./circle) - an object that performs a calculation of a
+  Circle's circumference, and returns a simple result - a double - that can
+  be embedded directly into the XSL output.
+  
+- [claims-simple](./claims-simple) - an extension object that checks through a
+  medical claim and performs some analysis of it. It returns an XML NodeSet,
+  which is embedded into the output of the XSL.
+   
+- [claims-with-rules](./claims-with-rules) - an extension object that uses a
+  Business Rules engine to process a medical claim. As above, it returns an XML
+  NodeSet, which is embedded into the output of the XSL.
+
+
 ## Pre-requisites
 
 - for development, a Linux workstation
@@ -140,7 +159,34 @@ C# object:
 - [the gcloud cli](https://cloud.google.com/sdk/docs/install-sdk)
 
 
-## Building it
+## Building the demonstrations
+
+Open a terminal window.
+
+To build each of [circle](./circle), 
+ [claims-simple](./claims-simple), and
+ [claims-with-rules](./claims-with-rules), cd into the appropriate directory and
+ execute `dotnet build`.
+
+To run, execute `dotnet run`.
+
+Each service listens by default on localhost:9090.  Because they all use the
+same port, you can run just one of these services at a time on your local
+workstation.
+
+## Sending data into the service
+
+You can use the curl command to send a request any of the services.
+```sh
+curl -i -X POST -H content-type:application/xml \
+  ${ENDPOINT}/xml \
+  --data-binary @"${randomfile}"
+```
+
+The `ENDPOINT` should be 
+Use the 
 
 
+
+ 
 
