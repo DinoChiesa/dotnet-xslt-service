@@ -51,8 +51,7 @@ public static class Program
             if (files == null || files.Length == 0)
                 throw new FileNotFoundException("Stylesheet not found.");
 
-            var claimsServiceUri = getClaimsServiceUri();
-            var obj = new ClaimsProcessor(claimsServiceUri);
+            var obj = new ClaimsProcessor();
 
             var app = XsltDemo.XsltWebApp.CreateApp(
                 SERVICE_NAME,
@@ -70,25 +69,5 @@ public static class Program
         {
             Console.Error.WriteLine(e.ToString());
         }
-    }
-
-    private static String getClaimsServiceUri()
-    {
-        var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-        var section =
-            config.GetSection("ClaimsServiceUri")
-            ?? throw new Exception("Missing ClaimsServiceUri configuration in appsettings.json");
-        var subkey =
-            (
-                Environment.GetEnvironmentVariable("K_SERVICE") != null
-                && Environment.GetEnvironmentVariable("K_REVISION") != null
-            )
-                ? "Remote"
-                : "Local";
-        string? uri =
-            section[subkey]
-            ?? throw new Exception("Missing Local configuration in appsettings.json");
-        Console.WriteLine($"using Claims Service URI: {uri}");
-        return uri;
     }
 }

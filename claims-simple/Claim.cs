@@ -38,6 +38,9 @@ public class Claim
     [XmlElement(ElementName = "reason")]
     public string? Reason { get; set; }
 
+    [XmlElement(ElementName = "note")]
+    public string? Note { get; set; }
+
     public Claim()
     {
         this.Reason = String.Empty;
@@ -54,10 +57,20 @@ public class Claim
     public void Approve()
     {
         this.IsApproved = true;
+        this.Note = null;
+        this.Reason = null;
+    }
+
+    public void ApproveWithNote(String note)
+    {
+        this.IsApproved = true;
+        this.Note = note;
+        this.Reason = null;
     }
 
     public void Reject(string reason)
     {
+        this.Note = null;
         this.Reason = reason;
     }
 }
