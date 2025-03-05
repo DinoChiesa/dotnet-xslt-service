@@ -1,0 +1,37 @@
+[
+  {
+    "WorkflowName": "ApprovalRules",
+    "Rules": [
+      {
+        "RuleName": "Approve-142007-Under-250",
+        "SuccessEvent": "approved",
+        "Expression": "input1.ProcedureCode == \"142007\" AND input1.Amount < 250"
+      },
+      {
+        "RuleName": "Approve-142007-250-to-299",
+        "SuccessEvent": "approved (with surcharge)",
+        "Expression": "input1.ProcedureCode == \"142007\" AND input1.Amount >= 250 AND input1.Amount < 300"
+      },
+      {
+        "RuleName": "Deny-142007-Over-300",
+        "SuccessEvent": "Exceeds amount for Procedure 142007",
+        "Expression": "input1.ProcedureCode == \"142007\" AND input1.Amount >= 300"
+      },
+      {
+        "RuleName": "Approve-166001-Under-180",
+        "SuccessEvent": "approved",
+        "Expression": "input1.ProcedureCode == \"166001\" AND input1.Amount < 180"
+      },
+      {
+        "RuleName": "provisional-approval-166001-180-to-200",
+        "SuccessEvent": "provisionally approved (requires additional documentation)",
+        "Expression": "input1.ProcedureCode == \"166001\" AND input1.Amount >= 180 AND input1.Amount <= 200"
+      },
+      {
+        "RuleName": "Deny-all-628003",
+        "SuccessEvent": "Explicitly Not Covered",
+        "Expression": "input1.ProcedureCode == \"628003\""
+      }
+    ]
+  }
+]

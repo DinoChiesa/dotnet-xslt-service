@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <StartupObject>ClaimsXsltDemo.Program</StartupObject>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.10" />
+    <PackageReference Include="RulesEngine" Version="5.0.3" />
+    <PackageReference Include="cmdwtf.BuildTimestampGenerator" Version="1.0.1" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\common\ResponseMiddleware.cs">
+      <Link>ResponseMiddleware.cs</Link>
+    </Compile>
+    <Compile Include="..\common\XsltWebApp.cs">
+      <Link>XsltWebApp.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <Target Name="PublishAdditionalFiles" AfterTargets="Publish">
+    <!-- Need the stylesheet1.xsl file to be readable by the container after build. -->
+    <ItemGroup>
+      <ResourceFiles Include="$(ProjectDir)\stylesheet1.xsl" />
+    </ItemGroup>
+    <!-- not sure which of these i need -->
+    <Copy SourceFiles="@(ResourceFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="@(ResourceFiles)" DestinationFolder="$(PublishDir).." SkipUnchangedFiles="false" />
+  </Target>
+
+</Project>
