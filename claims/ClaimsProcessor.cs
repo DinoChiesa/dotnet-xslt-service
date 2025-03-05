@@ -79,7 +79,6 @@ public class ClaimsProcessor
                 JsonSerializer.Deserialize<Claim>(responseContent, options)
                 ?? throw new Exception("cannot deserialize");
 
-            // use XmlSerializer - for some reason this is not working
             XmlSerializer xmlSerializer = new XmlSerializer(processedClaim.GetType());
             using (StringWriter textWriter = new StringWriter())
             {
