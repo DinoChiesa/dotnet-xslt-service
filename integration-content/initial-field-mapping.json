@@ -1,0 +1,274 @@
+{
+  "@type": "type.googleapis.com/enterprise.crm.eventbus.proto.FieldMappingConfig",
+  "mappedFields": [
+    {
+      "inputField": {
+        "fieldType": "STRING_VALUE",
+        "transformExpression": {
+          "initialValue": {
+            "referenceValue": "$CloudPubSubMessage.data$"
+          }
+        }
+      },
+      "outputField": {
+        "referenceKey": "$dataJson$",
+        "fieldType": "STRING_VALUE",
+        "cardinality": "OPTIONAL"
+      }
+    },
+    {
+      "inputField": {
+        "fieldType": "JSON_VALUE",
+        "transformExpression": {
+          "initialValue": {
+            "referenceValue": "$dataJson$"
+          },
+          "transformationFunctions": [
+            {
+              "functionType": {
+                "stringFunction": {
+                  "functionName": "TO_JSON"
+                }
+              }
+            },
+            {
+              "functionType": {
+                "jsonFunction": {
+                  "functionName": "GET_PROPERTY"
+                }
+              },
+              "parameters": [
+                {
+                  "initialValue": {
+                    "literalValue": {
+                      "stringValue": "mediaLink"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "outputField": {
+        "referenceKey": "$mediaLink$",
+        "fieldType": "STRING_VALUE",
+        "cardinality": "OPTIONAL"
+      }
+    },
+    {
+      "inputField": {
+        "fieldType": "STRING_VALUE",
+        "transformExpression": {
+          "initialValue": {
+            "baseFunction": {
+              "functionType": {
+                "baseFunction": {
+                  "functionName": "GET_EXECUTION_ID"
+                }
+              }
+            }
+          }
+        }
+      },
+      "outputField": {
+        "referenceKey": "$execution_id$",
+        "fieldType": "STRING_VALUE",
+        "cardinality": "OPTIONAL"
+      }
+    },
+    {
+      "inputField": {
+        "fieldType": "STRING_ARRAY",
+        "transformExpression": {
+          "initialValue": {
+            "referenceValue": "$dataJson$"
+          },
+          "transformationFunctions": [
+            {
+              "functionType": {
+                "stringFunction": {
+                  "functionName": "TO_JSON"
+                }
+              }
+            },
+            {
+              "functionType": {
+                "jsonFunction": {
+                  "functionName": "GET_PROPERTY"
+                }
+              },
+              "parameters": [
+                {
+                  "initialValue": {
+                    "literalValue": {
+                      "stringValue": "name"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "functionType": {
+                "jsonFunction": {
+                  "functionName": "TO_STRING"
+                }
+              }
+            },
+            {
+              "functionType": {
+                "stringFunction": {
+                  "functionName": "SPLIT"
+                }
+              },
+              "parameters": [
+                {
+                  "initialValue": {
+                    "literalValue": {
+                      "stringValue": "."
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "outputField": {
+        "referenceKey": "$idParts$",
+        "fieldType": "STRING_ARRAY",
+        "cardinality": "OPTIONAL"
+      }
+    },
+    {
+      "inputField": {
+        "fieldType": "INT_VALUE",
+        "transformExpression": {
+          "initialValue": {
+            "referenceValue": "$idParts$"
+          },
+          "transformationFunctions": [
+            {
+              "functionType": {
+                "stringArrayFunction": {
+                  "functionName": "SIZE"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "outputField": {
+        "referenceKey": "$idPartsSize$",
+        "fieldType": "INT_VALUE",
+        "cardinality": "OPTIONAL"
+      }
+    },
+    {
+      "inputField": {
+        "fieldType": "INT_VALUE",
+        "transformExpression": {
+          "initialValue": {
+            "referenceValue": "$idPartsSize$"
+          },
+          "transformationFunctions": [
+            {
+              "functionType": {
+                "intFunction": {
+                  "functionName": "SUBTRACT"
+                }
+              },
+              "parameters": [
+                {
+                  "initialValue": {
+                    "literalValue": {
+                      "intValue": "1"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "outputField": {
+        "referenceKey": "$idPartsLast$",
+        "fieldType": "INT_VALUE",
+        "cardinality": "OPTIONAL"
+      }
+    },
+    {
+      "inputField": {
+        "fieldType": "STRING_VALUE",
+        "transformExpression": {
+          "initialValue": {
+            "referenceValue": "$idParts$"
+          },
+          "transformationFunctions": [
+            {
+              "functionType": {
+                "stringArrayFunction": {
+                  "functionName": "GET"
+                }
+              },
+              "parameters": [
+                {
+                  "initialValue": {
+                    "referenceValue": "$idPartsLast$"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "outputField": {
+        "referenceKey": "$extension-of-uploaded-file$",
+        "fieldType": "STRING_VALUE",
+        "cardinality": "OPTIONAL"
+      }
+    },
+    {
+      "inputField": {
+        "fieldType": "STRING_VALUE",
+        "transformExpression": {
+          "initialValue": {
+            "baseFunction": {
+              "functionType": {
+                "baseFunction": {
+                  "functionName": "GET_INTEGRATION_NAME"
+                }
+              }
+            }
+          }
+        }
+      },
+      "outputField": {
+        "referenceKey": "$integration_name$",
+        "fieldType": "STRING_VALUE",
+        "cardinality": "OPTIONAL"
+      }
+    },
+    {
+      "inputField": {
+        "fieldType": "STRING_VALUE",
+        "transformExpression": {
+          "initialValue": {
+            "baseFunction": {
+              "functionType": {
+                "baseFunction": {
+                  "functionName": "GET_PROJECT_ID"
+                }
+              }
+            }
+          }
+        }
+      },
+      "outputField": {
+        "referenceKey": "$project_id$",
+        "fieldType": "STRING_VALUE",
+        "cardinality": "OPTIONAL"
+      }
+    }
+  ]
+}

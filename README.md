@@ -166,7 +166,7 @@ an extension object defined in C#:
 
 - for development, a Linux workstation
 - a bash shell
-- dotnet 8.0
+- [dotnet 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 - [the gcloud cli](https://cloud.google.com/sdk/docs/install-sdk)
 
 
@@ -177,9 +177,19 @@ the content from this repo.
 
 To locally build each of [circle](./circle), [claims-simple](./claims-simple), and
 [claims-with-rules](./claims-with-rules), cd into the appropriate directory and
-execute `dotnet build`. This will build one particular service.
+execute `dotnet build`. For example:
 
-To run one service, execute `dotnet run` from within the same directory.
+```sh
+cd circle
+dotnet build
+```
+
+This will build one particular service.
+
+To run one service, execute `dotnet run` from within the same directory:
+```sh
+dotnet run
+```
 
 Each service listens by default on localhost:9090.  Because they all use the
 same port, you can run just one of these services at a time on your local
@@ -188,13 +198,16 @@ workstation.
 ## Sending sample requests into the service running locally
 
 You can use the curl command to send a request any of the services.
-Open a new terminal and use this:
+_Open a new terminal_ and use this:
 
 ```sh
+cd circle
 ENDPOINT=0:9090
+data_files=(./sampledata/*.xml)
+selected_file="${data_files[$((RANDOM % ${#data_files[@]}))]}"
 curl -i -X POST -H content-type:application/xml \
   ${ENDPOINT}/xml \
-  --data-binary @"${randomfile}"
+  --data-binary @"${selected_file}"
 ```
 
 The `ENDPOINT` should be `0:9090` to connect with the service running locally. 
@@ -203,7 +216,8 @@ The file you send can be one of the XML files in the sampledata directory in
 each of the subdirectories.
 
 There's a [sendOne.sh](./sendOne.sh) script that can help you; it selects a
-random file and sends it to the service with a curl command.
+random file and prints it out, before sending it to the service with a curl
+command. It then prints the response.
 
 To use it:
 ```sh
@@ -247,7 +261,7 @@ service: claims-xslt-service-with-rules xx
 </claims>
 ```
 
-The input shows a sample claim in XML format. The response shows that the claim
+The input shows a sample claim in XML format sent to the claims-simple service. The response shows that the claim
 was approved with a surcharge.
 
 ## Deploying to Cloud Run
@@ -294,10 +308,14 @@ source ./env.sh
 The deploy script does some housekeeping - creates a service account, assigns
 roles to it, creates a Cloud Storage bucket, copies files into the bucket, and
 so on... And then, finally, it runs `gcloud run deploy` to deploy the .NET
-XSLT service, from source code, into Cloud Run.
+XSLT service, from source code, into Cloud Run.  This all takes a few minutes.
+
+> Don't try to run multiple invocations of `deploy-service.sh` at once; the script
+  checks for common shared resources and it won't handle race conditions.
 
 
-To invoke any of the services running in Cloud Run, sending a randomly selected input data payload:
+To invoke any of the services running in Cloud Run, use the `sendOne.sh` script .It
+sends a randomly selected input data payload:
 
 ```sh
 ./sendOne.sh circle
@@ -471,5 +489,9 @@ code as well as the all of the automation scripts.
         --data-binary @"${randomfile}"
       ```
 
-
-
+2. When deploying to cloud run, the deployment script copies the appsettings.json file
+   for each service to the APPCONFIG bucket. This overwrites any previous copy of that
+   file. Coincidentally the appsettings.json is identical among the three services
+   but if any of them should need a different file, there will be contention. The fix
+   is to use unique filenames for app settings. This requires some custom startup code
+   in the services. I decided that wasn't important, for now.

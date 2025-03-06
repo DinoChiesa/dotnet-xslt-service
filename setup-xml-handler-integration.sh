@@ -158,10 +158,16 @@ replace_content_files_in_template() {
   jq --arg content "$(cat ./integration-content/set-target-uri.js)" \
     '(.taskConfigs[] | select(.task == "JavaScriptTask" and .taskId == "7") | .parameters).script.value.stringValue = $content' $INTEGRATION_FILE >$TMP && cp $TMP $INTEGRATION_FILE
 
+  jq --arg content "$(cat ./integration-content/initial-field-mapping.json)" \
+    '(.taskConfigs[] | select(.task == "FieldMappingTask" and .taskId == "2") | .parameters).FieldMappingConfigTaskParameterKey.value.jsonValue = $content' $INTEGRATION_FILE >$TMP && cp $TMP $INTEGRATION_FILE
+
   jq --arg content "$(cat ./integration-content/plaintext-firstnode.xsl)" \
     '(.integrationConfigParameters[] | select(.parameter.key == "`CONFIG_first-node-name-xsl`") | .parameter).defaultValue.stringValue = $content' $INTEGRATION_FILE >$TMP && cp $TMP $INTEGRATION_FILE
   jq --arg content "$(cat ./integration-content/plaintext-firstnode.xsl)" \
     '(.integrationConfigParameters[] | select(.parameter.key == "`CONFIG_first-node-name-xsl`") | .value).stringValue = $content' $INTEGRATION_FILE >$TMP && cp $TMP $INTEGRATION_FILE
+
+  jq --arg content "$(cat ./integration-content/confirmation-email.txt)" \
+    '(.taskConfigs[] | select(.task == "EmailTask" and .taskId == "9") | .parameters).TextBody.value.stringValue = $content' $INTEGRATION_FILE >$TMP && cp $TMP $INTEGRATION_FILE
 
   rm -f $TMP
 }

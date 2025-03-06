@@ -1,0 +1,12 @@
+Status report:
+
+The integration named $integration_name$ received this input XML:
+$xml$
+
+After analysis, it was sent to $targetUri$
+
+Here's the result of the XML Transformation. 
+$`Task_8_responseBody`$
+
+project_id: $project_id$
+execution_id: $execution_id$
