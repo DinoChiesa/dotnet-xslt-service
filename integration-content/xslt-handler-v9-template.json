@@ -2,32 +2,12 @@
   "name": "projects/511582533367/locations/us-west1/integrations/@@INTEGRATION_NAME@@/versions/d7bbe816-f3c7-4389-b5ab-93f3a279e952",
   "description": "handles uploaded XML files by sending them to a transform service.",
   "updateTime": "2025-03-06T06:24:17.696Z",
-  "createTime": "2025-03-06T06:22:38.795Z",
+  "databasePersistencePolicy": "DATABASE_PERSISTENCE_ASYNC",
+  "cloudLoggingDetails": {
+    "cloudLoggingSeverity": "CLOUD_LOGGING_SEVERITY_UNSPECIFIED",
+    "enableCloudLogging": false
+  },
   "triggerConfigs": [
-    {
-      "label": "API Trigger",
-      "startTasks": [
-        {
-          "taskId": "1"
-        }
-      ],
-      "properties": {
-        "Trigger name": "@@INTEGRATION_NAME@@_API_1"
-      },
-      "triggerType": "API",
-      "triggerNumber": "1",
-      "triggerId": "api_trigger/@@INTEGRATION_NAME@@_API_1",
-      "position": {
-        "x": 960,
-        "y": 538
-      },
-      "inputVariables": {
-        "names": ["xml"]
-      },
-      "outputVariables": {
-        "names": ["firstNodeName"]
-      }
-    },
     {
       "label": "Cloud Pub/Sub Trigger",
       "startTasks": [
@@ -223,7 +203,7 @@
         "connectionName": {
           "key": "connectionName",
           "value": {
-            "stringValue": "projects/@@GCP_PROJECT@@/locations/@@REGION@@/connections/@@GCS_CONNECTOR@@"
+            "stringValue": "@@GCS_CONNECTOR@@"
           }
         },
         "connectorOutputPayload": {
@@ -443,12 +423,86 @@
           "key": "additionalHeaders"
         }
       },
+      "nextTasks": [
+        {
+          "taskId": "9"
+        }
+      ],
       "taskExecutionStrategy": "WHEN_ALL_SUCCEED",
       "displayName": "Call REST Endpoint",
       "externalTaskType": "NORMAL_TASK",
       "position": {
         "x": 748,
         "y": 910
+      }
+    },
+    {
+      "task": "EmailTask",
+      "taskId": "9",
+      "parameters": {
+        "Cc": {
+          "key": "Cc",
+          "value": {
+            "stringArray": {}
+          }
+        },
+        "TextBody": {
+          "key": "TextBody",
+          "value": {
+            "stringValue": "hi,\nhere\u0027s the result of the XML Transformation. \n$`Task_8_responseBody`$"
+          }
+        },
+        "Bcc": {
+          "key": "Bcc",
+          "value": {
+            "stringArray": {}
+          }
+        },
+        "AttachmentPath": {
+          "key": "AttachmentPath",
+          "value": {
+            "stringArray": {}
+          }
+        },
+        "ThrowNoRequiredInputException": {
+          "key": "ThrowNoRequiredInputException",
+          "value": {
+            "booleanValue": true
+          }
+        },
+        "To": {
+          "key": "To",
+          "value": {
+            "stringArray": {
+              "stringValues": ["@@EMAIL_ADDR@@"]
+            }
+          }
+        },
+        "Subject": {
+          "key": "Subject",
+          "value": {
+            "stringValue": "Result of the XML Transformation"
+          }
+        },
+        "BodyFormat": {
+          "key": "BodyFormat",
+          "value": {
+            "stringValue": "text"
+          }
+        },
+        "EmailConfigInput": {
+          "key": "EmailConfigInput",
+          "value": {
+            "jsonValue": "{\n  \"@type\": \"type.googleapis.com/enterprise.crm.eventbus.proto.EmailConfig\"\n}"
+          }
+        }
+      },
+      "taskExecutionStrategy": "WHEN_ALL_SUCCEED",
+      "displayName": "Send Email - Result XML",
+      "externalTaskType": "NORMAL_TASK",
+      "position": {
+        "x": 536,
+        "y": 1034
       }
     }
   ],

@@ -346,11 +346,62 @@ it along to another service.
 
 This flow might look like this:
 
-![flow image here](./images/TBD)
+![flow image here](./images/integration-screenshot-2025-03-06.png)
+
+Included here in this repo is a script to set up an Integration that
+
+- listens for files being dropped into Google Cloud Storage - this might happen
+  as the result of an SFTP upload.
+
+- reads the file, and inspects its content
+
+- sends the XML file to one of a set of different XSLT services depending on the content
+
+- sends a email with the result of the transform.
+
+To set this up, again make sure the settings in your env.sh file are correct,
+then:
+
+- check and maybe create the GCS connector
+  ```sh
+  source ./env..sh
+  ./check-and-maybe-create-gcs-connector.sh
+  ```
+  If that script creates a new connector, you will have to wait a bit for it to
+  finish.
+
+- Create the integration
+  ```sh
+  ./setup-xml-handler-integration.sh
+  ```
+
+  That will take a few minutes to run.
+
+- To send one file after that completes, use the upload script:
+  ```sh
+  ./upload-one.sh
+  ```
+
+  That will select a random XML file and drop it into the GCS upload bucket.
+  You should see an email at the email address you configured in your env.sh file.
 
 
 
-TBD - finish this part. 
+## Teardown and cleanup
+
+- If you set up the integration, you can remove it by running the teardown script:
+  ```sh
+  ./teardown-xml-handler-integration.sh
+  ```
+  This will remove the Integration, and the GCS upload bucket, and the PubSub
+  topic associated to it.
+
+- If you want to remove the Cloud Run service and the
+  service account associated to that, then you need to run the cleanup script:
+  ```sh
+  ./clean-gcp-artifacts.sh
+  ```
+
 
 
 

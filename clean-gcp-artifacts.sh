@@ -18,32 +18,7 @@ source ./lib/utils.sh
 
 TIMESTAMP=$(date '+%Y%m%d-%H%M%S')
 
-# Array of environment variable names to check
-env_vars_to_check=(
-  "PROJECT"
-  "REGION"
-  "SERVICE_ROOT"
-  "BUCKET_NAME"
-)
-
-remove_service_accounts() {
-  local sa found_saccts SA_NAME_PATTERN
-  SA_NAME_PATTERN="${SERVICE_ROOT}-"
-  echo "Checking service accounts"
-  echo "--------------------" >>"$OUTFILE"
-  echo "gcloud iam service-accounts list --project ${PROJECT} --format=value(email)" >>"$OUTFILE"
-  found_saccts=($(gcloud iam service-accounts list --project "$PROJECT" --format="value(email)"))
-  for sa in "${found_saccts[@]}"; do
-    if beginswith "${SA_NAME_PATTERN}" "${sa}"; then
-      printf "Deleting service account %s\n" "${sa}"
-      echo "--------------------" >>"$OUTFILE"
-      echo "gcloud --quiet iam service-accounts delete ${sa} --project ${PROJECT}" >>"$OUTFILE"
-      gcloud --quiet iam service-accounts delete "${sa}" --project "${PROJECT}" >>"$OUTFILE" 2>&1
-    fi
-  done
-}
-
-delete_crun_service() {
+delete_crun_services() {
   local svc found_svcs SERVICE_NAME_PATTERN
   SERVICE_NAME_PATTERN="${SERVICE_ROOT}-"
   printf "Checking Cloud Run jobs...\n"
@@ -62,15 +37,56 @@ delete_crun_service() {
   done
 }
 
+
+remove_service_account() {
+  local SERVICE_ACCOUNT SA_EMAIL
+  SERVICE_ACCOUNT="${SERVICE_ROOT}"
+  SA_EMAIL="${SERVICE_ROOT}@${PROJECT}.iam.gserviceaccount.com"
+
+  printf "Checking service account...\n"
+  echo "--------------------" >>"$OUTFILE"
+  echo "gcloud iam service-accounts describe \"$SA_EMAIL\" --project ${PROJECT} --format=value(email)" >>"$OUTFILE"
+  if gcloud iam service-accounts describe "$SA_EMAIL" --project "$PROJECT" >>"$OUTFILE" 2>&1; then
+    printf "Found. deleting it...\n"
+    echo "gcloud --quiet iam service-accounts delete ${SA_EMAIL} --project ${PROJECT}" >>"$OUTFILE"
+    if gcloud --quiet iam service-accounts delete "${SA_EMAIL}" --project "${PROJECT}" >>"$OUTFILE" 2>&1; then
+      printf "Success\n"
+    else
+      printf "Failed...\n"
+    fi
+  else
+    printf "did not find a service account...\n"
+  fi
+}
+
+remove_gcs_appconfig_bucket() {
+  printf "Checking GCS bucket (%s)...\n" "gs://${APPCONFIG_BUCKET}"
+  echo "--------------------" >>"$OUTFILE"
+  echo "gcloud storage buckets describe \"gs://${APPCONFIG_BUCKET}\" --format=\"json(name)\" --project=\"$PROJECT\" --quiet" >>"$OUTFILE"
+  if gcloud storage buckets describe "gs://${APPCONFIG_BUCKET}" --format="json(name)" --project="$PROJECT" --quiet >>"$OUTFILE" 2>&1; then
+    printf "Deleting that bucket...\n"
+    echo "--------------------" >>"$OUTFILE"
+    echo "gcloud storage buckets delete \"gs://${APPCONFIG_BUCKET}\" --location=\"${REGION}\" --project=\"$PROJECT\" --quiet" >>"$OUTFILE"
+    if gcloud storage buckets delete "gs://${APPCONFIG_BUCKET}" --location="${REGION}" --project="$PROJECT" --quiet >>"$OUTFILE" 2>&1; then
+      printf "Done.\n"
+    else
+      printf "The delete did not succeed.\n"
+    fi
+  else
+    printf "The bucket does not exist...\n"
+  fi
+}
+
+
 # ====================================================================
 OUTFILE=$(mktemp /tmp/apigee-tally-job.cleanup.out.XXXXXX)
 printf "\nLogging to %s\n" "$OUTFILE"
 printf "timestamp: %s\n" "$TIMESTAMP" >>"$OUTFILE"
-check_shell_variables "${env_vars_to_check[@]}"
+check_shell_variables "PROJECT" "REGION" "SERVICE_ROOT" "APPCONFIG_BUCKET"
 check_required_commands gcloud grep sed tr
 
-delete_crun_service
+delete_crun_services
 
-remove_service_accounts
+remove_service_account
 
 printf "\nAll the artifacts for this sample have now been removed.\n\n"
