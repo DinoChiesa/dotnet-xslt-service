@@ -43,7 +43,7 @@ remove_service_account() {
   SERVICE_ACCOUNT="${SERVICE_ROOT}"
   SA_EMAIL="${SERVICE_ROOT}@${PROJECT}.iam.gserviceaccount.com"
 
-  printf "Checking service account...\n"
+  printf "Checking service account %s...\n" "$SA_EMAIL"
   echo "--------------------" >>"$OUTFILE"
   echo "gcloud iam service-accounts describe \"$SA_EMAIL\" --project ${PROJECT} --format=value(email)" >>"$OUTFILE"
   if gcloud iam service-accounts describe "$SA_EMAIL" --project "$PROJECT" >>"$OUTFILE" 2>&1; then
@@ -66,8 +66,8 @@ remove_gcs_appconfig_bucket() {
   if gcloud storage buckets describe "gs://${APPCONFIG_BUCKET}" --format="json(name)" --project="$PROJECT" --quiet >>"$OUTFILE" 2>&1; then
     printf "Deleting that bucket...\n"
     echo "--------------------" >>"$OUTFILE"
-    echo "gcloud storage buckets delete \"gs://${APPCONFIG_BUCKET}\" --location=\"${REGION}\" --project=\"$PROJECT\" --quiet" >>"$OUTFILE"
-    if gcloud storage buckets delete "gs://${APPCONFIG_BUCKET}" --location="${REGION}" --project="$PROJECT" --quiet >>"$OUTFILE" 2>&1; then
+    echo "gcloud storage rm --recursive \"gs://${APPCONFIG_BUCKET}\" --project=\"$PROJECT\" --quiet" >>"$OUTFILE"
+    if gcloud storage rm --recursive "gs://${APPCONFIG_BUCKET}" --project="$PROJECT" --quiet >>"$OUTFILE" 2>&1; then
       printf "Done.\n"
     else
       printf "The delete did not succeed.\n"
@@ -79,14 +79,14 @@ remove_gcs_appconfig_bucket() {
 
 
 # ====================================================================
-OUTFILE=$(mktemp /tmp/apigee-tally-job.cleanup.out.XXXXXX)
+OUTFILE=$(mktemp /tmp/xslt-service-example.cleanup.out.XXXXXX)
 printf "\nLogging to %s\n" "$OUTFILE"
 printf "timestamp: %s\n" "$TIMESTAMP" >>"$OUTFILE"
 check_shell_variables "PROJECT" "REGION" "SERVICE_ROOT" "APPCONFIG_BUCKET"
 check_required_commands gcloud grep sed tr
 
 delete_crun_services
-
 remove_service_account
+remove_gcs_appconfig_bucket
 
 printf "\nAll the artifacts for this sample have now been removed.\n\n"

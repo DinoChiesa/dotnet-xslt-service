@@ -28,7 +28,7 @@ maybe_install_integrationcli() {
 }
 
 CURL() {
-  [[ -z "${CURL_OUT}" ]] && CURL_OUT=$(mktemp /tmp/appint-setup-script.curl.out.XXXXXX)
+  [[ -z "${CURL_OUT}" ]] && CURL_OUT=$(mktemp /tmp/example-script.curl.out.XXXXXX)
   [[ -f "${CURL_OUT}" ]] && rm ${CURL_OUT}
   #[[ $verbosity -gt 0 ]] && echo "curl $@"
   echo "--------------------" >>"$OUTFILE"
@@ -51,6 +51,8 @@ googleapis_whoami() {
 
   printf "\nGoogle access token info:\n"
   cat ${CURL_OUT}
+  printf "\nGoogle access token info:\n" >>"$OUTFILE"
+  cat ${CURL_OUT} >>"$OUTFILE"
 }
 
 check_shell_variables() {
@@ -96,8 +98,8 @@ getRandomContentFile() {
   if [[ -z "$1" ]]; then
     dir_to_search="."
   else
-  dir_to_search="$1"
-    fi 
+    dir_to_search="$1"
+  fi
   # Directory containing the JSON files
   data_dir="${dir_to_search}/sampledata"
 

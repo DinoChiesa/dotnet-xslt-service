@@ -22,14 +22,16 @@ NAME_PREFIX="${SERVICE_ROOT}-"
 check_integrations_and_delete() {
   local intarr verarr
   printf "Looking at all integrations...\n"
+  echo "--------------------" >>"$OUTFILE"
+  printf "Looking at all integrations...\n" >>"$OUTFILE"
   intarr=($(integrationcli integrations list -r "$REGION" -p "$PROJECT" -t "$TOKEN" |
     grep "\"name\"" |
     sed -E 's/"name"://g' |
     tr -d ' "\t,' |
     sed -E 's@projects/[^/]+/locations/[^/]+/integrations/@@'))
   for a in "${intarr[@]}"; do
-    #printf "  Checking $a...\n" "$a"
-    if beginswith "NAME_PREFIX" "$a"; then
+    printf "  Checking $a...\n" "$a" >>"$OUTFILE"
+    if beginswith "$NAME_PREFIX" "$a"; then
       printf "  Checking %s...\n" "$a"
       echo "--------------------" >>"$OUTFILE"
       echo "Find versions of $a that are published." >>"$OUTFILE"
@@ -113,8 +115,8 @@ remove_gcs_upload_bucket() {
   if gcloud storage buckets describe "gs://${UPLOAD_BUCKET}" --format="json(name)" --project="$PROJECT" --quiet >>"$OUTFILE" 2>&1; then
     printf "Deleting that bucket...\n"
     echo "--------------------" >>"$OUTFILE"
-    echo "gcloud storage buckets delete \"gs://${UPLOAD_BUCKET}\" --location=\"${REGION}\" --project=\"$PROJECT\" --quiet" >>"$OUTFILE"
-    if gcloud storage buckets delete "gs://${UPLOAD_BUCKET}" --location="${REGION}" --project="$PROJECT" --quiet >>"$OUTFILE" 2>&1; then
+    echo "gcloud storage rm --recursive \"gs://${UPLOAD_BUCKET}\" --project=\"$PROJECT\" --quiet" >>"$OUTFILE"
+    if gcloud storage rm --recursive "gs://${UPLOAD_BUCKET}" --project="$PROJECT" --quiet >>"$OUTFILE" 2>&1; then
       printf "Done.\n"
     else
       printf "The delete did not succeed.\n"
@@ -162,6 +164,5 @@ remove_iam_policy_bindings
 # Removing service account will be done with the other cleanup script
 remove_gcs_upload_bucket
 remove_pubsub_topic
-
 
 printf "\nAll the artifacts for the integration have now been removed.\n\n"
