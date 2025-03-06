@@ -13,6 +13,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+APPINT_ENDPT=https://integrations.googleapis.com
+
+beginswith() { case $2 in "$1"*) true ;; *) false ;; esac }
+
+maybe_install_integrationcli() {
+  # versions get updated regularly. I don't know how to check for latest.
+  # So the safest bet is to just unconditionally install.
+  #  if [[ ! -d "$HOME/.apigeecli/bin" ]]; then
+  printf "Installing latest integrationcli...\n"
+  curl --silent -L https://raw.githubusercontent.com/GoogleCloudPlatform/application-integration-management-toolkit/main/downloadLatest.sh | sh -
+  # fi
+  export PATH=$PATH:$HOME/.integrationcli/bin
+}
+
+CURL() {
+  [[ -z "${CURL_OUT}" ]] && CURL_OUT=$(mktemp /tmp/appint-setup-script.curl.out.XXXXXX)
+  [[ -f "${CURL_OUT}" ]] && rm ${CURL_OUT}
+  #[[ $verbosity -gt 0 ]] && echo "curl $@"
+  echo "--------------------" >>"$OUTFILE"
+  echo "curl $@" >>"$OUTFILE"
+  [[ $verbosity -gt 0 ]] && echo "curl $@"
+  CURL_RC=$(curl -s -w "%{http_code}" -H "Authorization: Bearer $TOKEN" -o "${CURL_OUT}" "$@")
+  [[ $verbosity -gt 0 ]] && echo "==> ${CURL_RC}"
+  echo "==> ${CURL_RC}" >>"$OUTFILE"
+  cat "${CURL_OUT}" >>"$OUTFILE"
+}
+
+googleapis_whoami() {
+  # for diagnostic purposes only
+  CURL -X GET "https://www.googleapis.com/oauth2/v1/userinfo?alt=json"
+  if [[ ${CURL_RC} -ne 200 ]]; then
+    printf "cannot inquire userinfo"
+    cat ${CURL_OUT}
+    exit 1
+  fi
+
+  printf "\nGoogle access token info:\n"
+  cat ${CURL_OUT}
+}
+
 check_shell_variables() {
   local MISSING_ENV_VARS
   MISSING_ENV_VARS=()

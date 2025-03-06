@@ -42,12 +42,14 @@ check_and_maybe_create_sa() {
 }
 
 check_and_maybe_create_gcs_bucket() {
-  printf "Checking GCS bucket (%s)...\n" "gs://${BUCKET_NAME}"
-  if gcloud storage buckets describe "gs://${BUCKET_NAME}" --format="json(name)" --project="$PROJECT" --quiet >"$OUTFILE" 2>&1; then
+  local bucket_name
+  bucket_name=$1
+  printf "Checking GCS bucket (%s)...\n" "gs://${bucket_name}"
+  if gcloud storage buckets describe "gs://${bucket_name}" --format="json(name)" --project="$PROJECT" --quiet >"$OUTFILE" 2>&1; then
     printf "That bucket already exists.\n"
   else
     printf "Creating the bucket...\n"
-    gcloud storage buckets create "gs://${BUCKET_NAME}" --default-storage-class="standard" --location="${REGION}" --project="$PROJECT" --quiet >"$OUTFILE" 2>&1
+    gcloud storage buckets create "gs://${bucket_name}" --default-storage-class="standard" --location="${REGION}" --project="$PROJECT" --quiet >"$OUTFILE" 2>&1
   fi
 }
 
@@ -60,15 +62,15 @@ clean_files() {
 
 # need this if mounting a GCS bucket into the container for configuration files or other data.
 grant_roles_to_sa_on_gcs_bucket() {
-  local ROLE
-  local ARR
+  local ROLE ARR bucket_name
+  bucket_name="$1"
   if [[ ${#SA_REQUIRED_ROLES[@]} -ne 0 ]]; then
     printf "Checking for required roles....\n"
     printf "Checking for required roles....\n" >>"$OUTFILE"
 
     # I could not get the --filter argument to work here. :<
     # shellcheck disable=SC2076
-    ARR=($(gcloud storage buckets get-iam-policy "gs://${BUCKET_NAME}" --project="${PROJECT}" \
+    ARR=($(gcloud storage buckets get-iam-policy "gs://${bucket_name}" --project="${PROJECT}" \
       --flatten="bindings[].members" |
       grep -v deleted |
       grep -A 1 members |
@@ -82,7 +84,7 @@ grant_roles_to_sa_on_gcs_bucket() {
       if ! [[ ${ARR[*]} =~ "${ROLE}" ]]; then
         printf "    Adding role %s...\n" "${ROLE}"
         printf "    Adding role %s...\n" "${ROLE}" >>"$OUTFILE"
-        gcloud storage buckets add-iam-policy-binding "gs://${BUCKET_NAME}" \
+        gcloud storage buckets add-iam-policy-binding "gs://${bucket_name}" \
           --member="serviceAccount:${SA_EMAIL}" --project="${PROJECT}" --role="${ROLE}" --quiet >/dev/null 2>&1
       else
         printf "    That role is already set on the bucket...\n"
@@ -121,13 +123,13 @@ manage_linked_files() {
 copy_files_to_bucket() {
   local bname extensions file ext
   extensions=("xsl" "json")
-  printf "Copying files to the bucket %s\n" "$BUCKET_NAME"
-  printf "Copying files to the bucket %s\n" "$BUCKET_NAME" >>"$OUTFILE"
+  printf "Copying files to the bucket %s\n" "$APPCONFIG_BUCKET"
+  printf "Copying files to the bucket %s\n" "$APPCONFIG_BUCKET" >>"$OUTFILE"
   for ext in "${extensions[@]}"; do
     for file in "${example_name}"/*."${ext}"; do
       if [[ -f "$file" ]]; then # Check if it's a regular file
         bname=$(basename "$file")
-        gcloud storage cp "$file" "gs://${BUCKET_NAME}/${bname}" --project="$PROJECT"
+        gcloud storage cp "$file" "gs://${APPCONFIG_BUCKET}/${bname}" --project="$PROJECT"
         echo "Copied: $file"
       fi
     done
@@ -140,7 +142,7 @@ copy_files_to_bucket() {
 validate_arg_as_sample_dir "$1"
 
 check_required_commands gcloud grep sed tr
-check_shell_variables PROJECT REGION SERVICE_ROOT BUCKET_NAME
+check_shell_variables PROJECT REGION SERVICE_ROOT APPCONFIG_BUCKET
 
 # derived variables
 SERVICE_ACCOUNT="${SERVICE_ROOT}"
@@ -151,9 +153,9 @@ printf "Logging to %s\n" "$OUTFILE"
 
 check_and_maybe_create_sa
 
-check_and_maybe_create_gcs_bucket
+check_and_maybe_create_gcs_bucket "$APPCONFIG_BUCKET"
 
-grant_roles_to_sa_on_gcs_bucket
+grant_roles_to_sa_on_gcs_bucket "$APPCONFIG_BUCKET"
 
 copy_files_to_bucket
 
@@ -184,7 +186,7 @@ echo "gcloud run deploy \"${SERVICE}\" \
   --service-account \"${SA_EMAIL}\" \
   --timeout 380 \
   --set-env-vars \"APP_CONFIG=/mnt/mounted-config\" \
-  --add-volume \"name=volume_config,type=cloud-storage,bucket=${BUCKET_NAME}\" \
+  --add-volume \"name=volume_config,type=cloud-storage,bucket=${APPCONFIG_BUCKET}\" \
   --add-volume-mount \"volume=volume_config,mount-path=/mnt/mounted-config\"" >>$OUTFILE
 
 # Note: mounting filesystems, such as GCS buckets, implicitly requires the gen2
@@ -203,7 +205,7 @@ gcloud run deploy "${SERVICE}" \
   --service-account "${SA_EMAIL}" \
   --timeout 380 \
   --set-env-vars "APP_CONFIG=/mnt/mounted-config" \
-  --add-volume "name=volume_config,type=cloud-storage,bucket=${BUCKET_NAME}" \
+  --add-volume "name=volume_config,type=cloud-storage,bucket=${APPCONFIG_BUCKET}" \
   --add-volume-mount "volume=volume_config,mount-path=/mnt/mounted-config"
 
 manage_linked_files rm

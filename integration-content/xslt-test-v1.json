@@ -1,0 +1,64 @@
+{
+  "name": "projects/549320479596/locations/us-east1/integrations/xslt-test/versions/edb06f89-7eb9-4921-8480-7f2c3481070d",
+  "updateTime": "2024-08-02T08:39:14.444Z",
+  "lockHolder": "rohitjangid@google.com",
+  "createTime": "2024-08-02T08:36:34.787Z",
+  "lastModifierEmail": "rohitjangid@google.com",
+  "triggerConfigs": [{
+    "label": "API Trigger",
+    "startTasks": [{
+      "taskId": "1"
+    }],
+    "properties": {
+      "Trigger name": "xslt-test_API_1"
+    },
+    "triggerType": "API",
+    "triggerNumber": "1",
+    "triggerId": "api_trigger/xslt-test_API_1",
+    "position": {
+      "x": -160,
+      "y": -256
+    }
+  }],
+  "taskConfigs": [{
+    "task": "JsonnetMapperTask",
+    "taskId": "1",
+    "parameters": {
+      "template": {
+        "key": "template",
+        "value": {
+          "stringValue": "local f \u003d import \"functions\";\nlocal xml \u003d std.extVar(\"xml\");\nlocal xsl \u003d std.extVar(\"xsl\");\n{\n    output: f.xsltTransform(xml, xsl)\n}"
+        }
+      }
+    },
+    "taskExecutionStrategy": "WHEN_ALL_SUCCEED",
+    "displayName": "Data Transformer",
+    "externalTaskType": "NORMAL_TASK",
+    "position": {
+      "x": -144,
+      "y": -128
+    }
+  }],
+  "integrationParameters": [{
+    "key": "output",
+    "dataType": "STRING_VALUE",
+    "displayName": "output",
+    "inputOutputType": "OUT"
+  }, {
+    "key": "xml",
+    "dataType": "STRING_VALUE",
+    "defaultValue": {
+      "stringValue": "\u003c?xml version\u003d\"1.0\"?\u003e\n\u003c?xml-stylesheet type\u003d\"text/xsl\" href\u003d\"example.xsl\"?\u003e\n\u003cArticle\u003e\n  \u003cTitle\u003eMy Article\u003c/Title\u003e\n  \u003cAuthors\u003e\n    \u003cAuthor\u003eMr. Foo\u003c/Author\u003e\n    \u003cAuthor\u003eMr. Bar\u003c/Author\u003e\n  \u003c/Authors\u003e\n  \u003cBody\u003eThis is my article text.\u003c/Body\u003e\n\u003c/Article\u003e"
+    },
+    "displayName": "xml",
+    "inputOutputType": "IN"
+  }, {
+    "key": "xsl",
+    "dataType": "STRING_VALUE",
+    "defaultValue": {
+      "stringValue": "\u003c?xml version\u003d\"1.0\"?\u003e\n\u003cxsl:stylesheet version\u003d\"1.0\" xmlns:xsl\u003d\"http://www.w3.org/1999/XSL/Transform\"\u003e\n\n  \u003cxsl:output method\u003d\"text\"/\u003e\n\n  \u003cxsl:template match\u003d\"/\"\u003e\n    Article - \u003cxsl:value-of select\u003d\"/Article/Title\"/\u003e\n    Authors: \u003cxsl:apply-templates select\u003d\"/Article/Authors/Author\"/\u003e\n  \u003c/xsl:template\u003e\n\n  \u003cxsl:template match\u003d\"Author\"\u003e\n    - \u003cxsl:value-of select\u003d\".\" /\u003e\n  \u003c/xsl:template\u003e\n\n\u003c/xsl:stylesheet\u003e\n"
+    },
+    "displayName": "xsl",
+    "inputOutputType": "IN"
+  }]
+}

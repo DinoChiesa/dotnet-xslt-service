@@ -1,0 +1,675 @@
+{
+  "name": "projects/511582533367/locations/us-west1/integrations/@@INTEGRATION_NAME@@/versions/d7bbe816-f3c7-4389-b5ab-93f3a279e952",
+  "description": "handles uploaded XML files by sending them to a transform service.",
+  "updateTime": "2025-03-06T06:24:17.696Z",
+  "createTime": "2025-03-06T06:22:38.795Z",
+  "triggerConfigs": [
+    {
+      "label": "API Trigger",
+      "startTasks": [
+        {
+          "taskId": "1"
+        }
+      ],
+      "properties": {
+        "Trigger name": "@@INTEGRATION_NAME@@_API_1"
+      },
+      "triggerType": "API",
+      "triggerNumber": "1",
+      "triggerId": "api_trigger/@@INTEGRATION_NAME@@_API_1",
+      "position": {
+        "x": 960,
+        "y": 538
+      },
+      "inputVariables": {
+        "names": ["xml"]
+      },
+      "outputVariables": {
+        "names": ["firstNodeName"]
+      }
+    },
+    {
+      "label": "Cloud Pub/Sub Trigger",
+      "startTasks": [
+        {
+          "taskId": "2"
+        }
+      ],
+      "properties": {
+        "IP Project name": "@@GCP_PROJECT@@",
+        "Subscription name": "@@GCP_PROJECT@@_@@PUBSUB_TOPIC@@",
+        "Service account": "@@FULL_SA_EMAIL@@"
+      },
+      "triggerType": "CLOUD_PUBSUB_EXTERNAL",
+      "triggerNumber": "2",
+      "triggerId": "cloud_pubsub_external_trigger/projects/@@GCP_PROJECT@@/subscriptions/@@GCP_PROJECT@@_@@PUBSUB_TOPIC@@",
+      "position": {
+        "x": 324,
+        "y": 42
+      }
+    }
+  ],
+  "taskConfigs": [
+    {
+      "task": "JsonnetMapperTask",
+      "taskId": "1",
+      "parameters": {
+        "template": {
+          "key": "template",
+          "value": {
+            "stringValue": "local f \u003d import \"functions\";\nlocal xml \u003d std.extVar(\"xml\");\nlocal xsl \u003d std.extVar(\"`CONFIG_first-node-name-xsl`\");\n{\n    firstNodeName: f.xsltTransform(xml, xsl)\n}"
+          }
+        }
+      },
+      "nextTasks": [
+        {
+          "taskId": "7"
+        }
+      ],
+      "taskExecutionStrategy": "WHEN_ALL_SUCCEED",
+      "displayName": "Extract First Node",
+      "externalTaskType": "NORMAL_TASK",
+      "position": {
+        "x": 748,
+        "y": 662
+      }
+    },
+    {
+      "task": "FieldMappingTask",
+      "taskId": "2",
+      "parameters": {
+        "FieldMappingConfigTaskParameterKey": {
+          "key": "FieldMappingConfigTaskParameterKey",
+          "value": {
+            "jsonValue": "{\n  \"@type\": \"type.googleapis.com/enterprise.crm.eventbus.proto.FieldMappingConfig\",\n  \"mappedFields\": [{\n    \"inputField\": {\n      \"fieldType\": \"STRING_VALUE\",\n      \"transformExpression\": {\n        \"initialValue\": {\n          \"referenceValue\": \"$CloudPubSubMessage.data$\"\n        }\n      }\n    },\n    \"outputField\": {\n      \"referenceKey\": \"$dataJson$\",\n      \"fieldType\": \"STRING_VALUE\",\n      \"cardinality\": \"OPTIONAL\"\n    }\n  }, {\n    \"inputField\": {\n      \"fieldType\": \"JSON_VALUE\",\n      \"transformExpression\": {\n        \"initialValue\": {\n          \"referenceValue\": \"$dataJson$\"\n        },\n        \"transformationFunctions\": [{\n          \"functionType\": {\n            \"stringFunction\": {\n              \"functionName\": \"TO_JSON\"\n            }\n          }\n        }, {\n          \"functionType\": {\n            \"jsonFunction\": {\n              \"functionName\": \"GET_PROPERTY\"\n            }\n          },\n          \"parameters\": [{\n            \"initialValue\": {\n              \"literalValue\": {\n                \"stringValue\": \"mediaLink\"\n              }\n            }\n          }]\n        }]\n      }\n    },\n    \"outputField\": {\n      \"referenceKey\": \"$mediaLink$\",\n      \"fieldType\": \"STRING_VALUE\",\n      \"cardinality\": \"OPTIONAL\"\n    }\n  }, {\n    \"inputField\": {\n      \"fieldType\": \"STRING_VALUE\",\n      \"transformExpression\": {\n        \"initialValue\": {\n          \"baseFunction\": {\n            \"functionType\": {\n              \"baseFunction\": {\n                \"functionName\": \"GET_EXECUTION_ID\"\n              }\n            }\n          }\n        }\n      }\n    },\n    \"outputField\": {\n      \"referenceKey\": \"$execution_id$\",\n      \"fieldType\": \"STRING_VALUE\",\n      \"cardinality\": \"OPTIONAL\"\n    }\n  }, {\n    \"inputField\": {\n      \"fieldType\": \"STRING_ARRAY\",\n      \"transformExpression\": {\n        \"initialValue\": {\n          \"referenceValue\": \"$dataJson$\"\n        },\n        \"transformationFunctions\": [{\n          \"functionType\": {\n            \"stringFunction\": {\n              \"functionName\": \"TO_JSON\"\n            }\n          }\n        }, {\n          \"functionType\": {\n            \"jsonFunction\": {\n              \"functionName\": \"GET_PROPERTY\"\n            }\n          },\n          \"parameters\": [{\n            \"initialValue\": {\n              \"literalValue\": {\n                \"stringValue\": \"name\"\n              }\n            }\n          }]\n        }, {\n          \"functionType\": {\n            \"jsonFunction\": {\n              \"functionName\": \"TO_STRING\"\n            }\n          }\n        }, {\n          \"functionType\": {\n            \"stringFunction\": {\n              \"functionName\": \"SPLIT\"\n            }\n          },\n          \"parameters\": [{\n            \"initialValue\": {\n              \"literalValue\": {\n                \"stringValue\": \".\"\n              }\n            }\n          }]\n        }]\n      }\n    },\n    \"outputField\": {\n      \"referenceKey\": \"$idParts$\",\n      \"fieldType\": \"STRING_ARRAY\",\n      \"cardinality\": \"OPTIONAL\"\n    }\n  }, {\n    \"inputField\": {\n      \"fieldType\": \"INT_VALUE\",\n      \"transformExpression\": {\n        \"initialValue\": {\n          \"referenceValue\": \"$idParts$\"\n        },\n        \"transformationFunctions\": [{\n          \"functionType\": {\n            \"stringArrayFunction\": {\n              \"functionName\": \"SIZE\"\n            }\n          }\n        }]\n      }\n    },\n    \"outputField\": {\n      \"referenceKey\": \"$idPartsSize$\",\n      \"fieldType\": \"INT_VALUE\",\n      \"cardinality\": \"OPTIONAL\"\n    }\n  }, {\n    \"inputField\": {\n      \"fieldType\": \"INT_VALUE\",\n      \"transformExpression\": {\n        \"initialValue\": {\n          \"referenceValue\": \"$idPartsSize$\"\n        },\n        \"transformationFunctions\": [{\n          \"functionType\": {\n            \"intFunction\": {\n              \"functionName\": \"SUBTRACT\"\n            }\n          },\n          \"parameters\": [{\n            \"initialValue\": {\n              \"literalValue\": {\n                \"intValue\": \"1\"\n              }\n            }\n          }]\n        }]\n      }\n    },\n    \"outputField\": {\n      \"referenceKey\": \"$idPartsLast$\",\n      \"fieldType\": \"INT_VALUE\",\n      \"cardinality\": \"OPTIONAL\"\n    }\n  }, {\n    \"inputField\": {\n      \"fieldType\": \"STRING_VALUE\",\n      \"transformExpression\": {\n        \"initialValue\": {\n          \"referenceValue\": \"$idParts$\"\n        },\n        \"transformationFunctions\": [{\n          \"functionType\": {\n            \"stringArrayFunction\": {\n              \"functionName\": \"GET\"\n            }\n          },\n          \"parameters\": [{\n            \"initialValue\": {\n              \"referenceValue\": \"$idPartsLast$\"\n            }\n          }]\n        }]\n      }\n    },\n    \"outputField\": {\n      \"referenceKey\": \"$extension-of-uploaded-file$\",\n      \"fieldType\": \"STRING_VALUE\",\n      \"cardinality\": \"OPTIONAL\"\n    }\n  }]\n}"
+          }
+        }
+      },
+      "nextTasks": [
+        {
+          "taskId": "3",
+          "condition": "NOT ($extension-of-uploaded-file$ \u003d \"xml\")",
+          "displayName": "NOT XML file"
+        },
+        {
+          "taskId": "4",
+          "condition": "$extension-of-uploaded-file$ \u003d \"xml\"",
+          "displayName": "XML File"
+        }
+      ],
+      "taskExecutionStrategy": "WHEN_ALL_SUCCEED",
+      "displayName": "Determine File Type",
+      "externalTaskType": "NORMAL_TASK",
+      "position": {
+        "x": 324,
+        "y": 166
+      }
+    },
+    {
+      "task": "EmailTask",
+      "taskId": "3",
+      "parameters": {
+        "Cc": {
+          "key": "Cc",
+          "value": {
+            "stringArray": {}
+          }
+        },
+        "TextBody": {
+          "key": "TextBody",
+          "value": {
+            "stringValue": "Hi, \nThe uploaded file at $mediaLink$ is not an XML file.  \nfile extension: $extension-of-uploaded-file$\n\n-the Mgmt"
+          }
+        },
+        "Bcc": {
+          "key": "Bcc",
+          "value": {
+            "stringArray": {}
+          }
+        },
+        "AttachmentPath": {
+          "key": "AttachmentPath",
+          "value": {
+            "stringArray": {}
+          }
+        },
+        "ThrowNoRequiredInputException": {
+          "key": "ThrowNoRequiredInputException",
+          "value": {
+            "booleanValue": true
+          }
+        },
+        "To": {
+          "key": "To",
+          "value": {
+            "stringArray": {
+              "stringValues": ["@@EMAIL_ADDR@@"]
+            }
+          }
+        },
+        "Subject": {
+          "key": "Subject",
+          "value": {
+            "stringValue": "An Unknown file type was uploaded"
+          }
+        },
+        "BodyFormat": {
+          "key": "BodyFormat",
+          "value": {
+            "stringValue": "text"
+          }
+        },
+        "EmailConfigInput": {
+          "key": "EmailConfigInput",
+          "value": {
+            "jsonValue": "{\n  \"@type\": \"type.googleapis.com/enterprise.crm.eventbus.proto.EmailConfig\"\n}"
+          }
+        }
+      },
+      "taskExecutionStrategy": "WHEN_ALL_SUCCEED",
+      "displayName": "Send Email",
+      "externalTaskType": "NORMAL_TASK",
+      "position": {
+        "x": 112,
+        "y": 290
+      }
+    },
+    {
+      "task": "JavaScriptTask",
+      "taskId": "4",
+      "parameters": {
+        "javaScriptEngine": {
+          "key": "javaScriptEngine",
+          "value": {
+            "stringValue": "V8"
+          }
+        },
+        "script": {
+          "key": "script",
+          "value": {
+            "stringValue": "function executeScript(event) {\n  var json \u003d JSON.parse(event.getParameter(\"dataJson\"));\n  var payload \u003d {\n    type: typeof json,\n    Bucket: json.bucket || \"default\",\n    ObjectFilePath: json.id ? json.id.split(\"/\")[1] : \"object-name\"\n  };\n  event.log(\u0027setting connectorInputPayload...\u0027);\n    event.setParameter(\"`Task_5_connectorInputPayload`\", payload);\n}"
+          }
+        }
+      },
+      "nextTasks": [
+        {
+          "taskId": "5"
+        }
+      ],
+      "taskExecutionStrategy": "WHEN_ALL_SUCCEED",
+      "displayName": "Produce GCS Connector Payload",
+      "externalTaskType": "NORMAL_TASK",
+      "position": {
+        "x": 536,
+        "y": 290
+      }
+    },
+    {
+      "task": "GenericConnectorTask",
+      "taskId": "5",
+      "parameters": {
+        "connectorInputPayload": {
+          "key": "connectorInputPayload",
+          "value": {
+            "stringValue": "$`Task_5_connectorInputPayload`$"
+          }
+        },
+        "authOverrideEnabled": {
+          "key": "authOverrideEnabled",
+          "value": {
+            "booleanValue": false
+          }
+        },
+        "connectionName": {
+          "key": "connectionName",
+          "value": {
+            "stringValue": "projects/@@GCP_PROJECT@@/locations/@@REGION@@/connections/@@GCS_CONNECTOR@@"
+          }
+        },
+        "connectorOutputPayload": {
+          "key": "connectorOutputPayload",
+          "value": {
+            "stringValue": "$`Task_5_connectorOutputPayload`$"
+          }
+        },
+        "operation": {
+          "key": "operation",
+          "value": {
+            "stringValue": "EXECUTE_ACTION"
+          }
+        },
+        "connectionVersion": {
+          "key": "connectionVersion",
+          "value": {
+            "stringValue": "projects/@@GCP_PROJECT@@/locations/global/providers/gcp/connectors/gcs/versions/1"
+          }
+        },
+        "actionName": {
+          "key": "actionName",
+          "value": {
+            "stringValue": "DownloadObject"
+          }
+        }
+      },
+      "nextTasks": [
+        {
+          "taskId": "6"
+        }
+      ],
+      "taskExecutionStrategy": "WHEN_ALL_SUCCEED",
+      "displayName": "Retrieve uploaded file",
+      "externalTaskType": "NORMAL_TASK",
+      "position": {
+        "x": 536,
+        "y": 414
+      }
+    },
+    {
+      "task": "JavaScriptTask",
+      "taskId": "6",
+      "parameters": {
+        "javaScriptEngine": {
+          "key": "javaScriptEngine",
+          "value": {
+            "stringValue": "V8"
+          }
+        },
+        "script": {
+          "key": "script",
+          "value": {
+            "stringValue": "function executeScript(event) {\n  var json \u003d event.getParameter(\"`Task_5_connectorOutputPayload`\");\n  var xmlText \u003d json[0].Content;\n  if (xmlText) {\n    event.setParameter(\"xml\", xmlText);\n  } else {\n    event.log(\"no xmlext!\");\n  }\n}\n"
+          }
+        }
+      },
+      "nextTasks": [
+        {
+          "taskId": "1"
+        }
+      ],
+      "taskExecutionStrategy": "WHEN_ALL_SUCCEED",
+      "displayName": "extract XML Content",
+      "externalTaskType": "NORMAL_TASK",
+      "position": {
+        "x": 536,
+        "y": 538
+      }
+    },
+    {
+      "task": "JavaScriptTask",
+      "taskId": "7",
+      "parameters": {
+        "javaScriptEngine": {
+          "key": "javaScriptEngine",
+          "value": {
+            "stringValue": "V8"
+          }
+        },
+        "script": {
+          "key": "script",
+          "value": {
+            "stringValue": "function executeScript(event) {\n  var nodeName \u003d event.getParameter(\"firstNodeName\");\n  // let targetUri \u003d (nodeName \u003d\u003d \"claims\") ? \"https://xslt-svc-claims-with-rules-lwy4scuauq-uw.a.run.app\" : \"https://xslt-svc-circle-lwy4scuauq-uw.a.run.app\";\n\n  let targetUri \u003d event.getParameter((nodeName \u003d\u003d \"claims\") ? \"`CONFIG_xslt-claims-uri`\":  \"`CONFIG_xslt-circle-uri`\");\n\n  event.log(\u0027setting targetUri...\u0027);\n  event.setParameter(\"targetUri\", targetUri+\"/xml\");\n}\n"
+          }
+        }
+      },
+      "nextTasks": [
+        {
+          "taskId": "8"
+        }
+      ],
+      "taskExecutionStrategy": "WHEN_ALL_SUCCEED",
+      "displayName": "JS - Set Target URI",
+      "externalTaskType": "NORMAL_TASK",
+      "position": {
+        "x": 748,
+        "y": 786
+      }
+    },
+    {
+      "task": "GenericRestV2Task",
+      "taskId": "8",
+      "parameters": {
+        "throwError": {
+          "key": "throwError",
+          "value": {
+            "booleanValue": true
+          }
+        },
+        "responseBody": {
+          "key": "responseBody",
+          "value": {
+            "stringArray": {
+              "stringValues": ["$`Task_8_responseBody`$"]
+            }
+          }
+        },
+        "disableSSLValidation": {
+          "key": "disableSSLValidation",
+          "value": {
+            "booleanValue": false
+          }
+        },
+        "httpParams": {
+          "key": "httpParams",
+          "value": {
+            "jsonValue": "{\n  \"@type\": \"type.googleapis.com/enterprise.crm.eventbus.proto.ParameterMap\",\n  \"entries\": [{\n    \"key\": {\n      \"literalValue\": {\n        \"stringValue\": \"content-type\"\n      }\n    },\n    \"value\": {\n      \"literalValue\": {\n        \"stringValue\": \"application/xml\"\n      }\n    }\n  }]\n}"
+          }
+        },
+        "authConfigName": {
+          "key": "authConfigName",
+          "value": {
+            "stringValue": ""
+          }
+        },
+        "responseHeader": {
+          "key": "responseHeader",
+          "value": {
+            "stringArray": {
+              "stringValues": ["$`Task_8_responseHeader`$"]
+            }
+          }
+        },
+        "userAgent": {
+          "key": "userAgent",
+          "value": {
+            "stringValue": ""
+          }
+        },
+        "httpMethod": {
+          "key": "httpMethod",
+          "value": {
+            "stringValue": "POST"
+          }
+        },
+        "responseStatus": {
+          "key": "responseStatus",
+          "value": {
+            "stringArray": {
+              "stringValues": ["$`Task_8_responseStatus`$"]
+            }
+          }
+        },
+        "timeout": {
+          "key": "timeout",
+          "value": {
+            "intValue": "0"
+          }
+        },
+        "url": {
+          "key": "url",
+          "value": {
+            "stringValue": "$targetUri$"
+          }
+        },
+        "useSSL": {
+          "key": "useSSL",
+          "value": {
+            "booleanValue": false
+          }
+        },
+        "urlFetchingService": {
+          "key": "urlFetchingService",
+          "value": {
+            "stringValue": "HARPOON"
+          }
+        },
+        "urlQueryStrings": {
+          "key": "urlQueryStrings"
+        },
+        "requestorId": {
+          "key": "requestorId",
+          "value": {
+            "stringValue": ""
+          }
+        },
+        "jsonAdditionalHeaders": {
+          "key": "jsonAdditionalHeaders",
+          "value": {
+            "jsonValue": "null"
+          }
+        },
+        "requestBody": {
+          "key": "requestBody",
+          "value": {
+            "stringValue": "$xml$"
+          }
+        },
+        "followRedirects": {
+          "key": "followRedirects",
+          "value": {
+            "booleanValue": true
+          }
+        },
+        "additionalHeaders": {
+          "key": "additionalHeaders"
+        }
+      },
+      "taskExecutionStrategy": "WHEN_ALL_SUCCEED",
+      "displayName": "Call REST Endpoint",
+      "externalTaskType": "NORMAL_TASK",
+      "position": {
+        "x": 748,
+        "y": 910
+      }
+    }
+  ],
+  "integrationParameters": [
+    {
+      "key": "output",
+      "dataType": "STRING_VALUE",
+      "displayName": "output",
+      "inputOutputType": "OUT"
+    },
+    {
+      "key": "xml",
+      "dataType": "STRING_VALUE",
+      "defaultValue": {
+        "stringValue": "\u003c?xml version\u003d\"1.0\"?\u003e\n\u003c?xml-stylesheet type\u003d\"text/xsl\" href\u003d\"example.xsl\"?\u003e\n\u003cArticle\u003e\n  \u003cTitle\u003eMy Article\u003c/Title\u003e\n  \u003cAuthors\u003e\n    \u003cAuthor\u003eMr. Foo\u003c/Author\u003e\n    \u003cAuthor\u003eMr. Bar\u003c/Author\u003e\n  \u003c/Authors\u003e\n  \u003cBody\u003eThis is my article text.\u003c/Body\u003e\n\u003c/Article\u003e"
+      },
+      "displayName": "xml",
+      "inputOutputType": "IN"
+    },
+    {
+      "key": "xsl",
+      "dataType": "STRING_VALUE",
+      "defaultValue": {
+        "stringValue": "\u003c?xml version\u003d\"1.0\"?\u003e\n\u003cxsl:stylesheet version\u003d\"1.0\" xmlns:xsl\u003d\"http://www.w3.org/1999/XSL/Transform\"\u003e\n\n  \u003cxsl:output method\u003d\"text\"/\u003e\n\n  \u003cxsl:template match\u003d\"/\"\u003e\n    Article - \u003cxsl:value-of select\u003d\"/Article/Title\"/\u003e\n    Authors: \u003cxsl:apply-templates select\u003d\"/Article/Authors/Author\"/\u003e\n  \u003c/xsl:template\u003e\n\n  \u003cxsl:template match\u003d\"Author\"\u003e\n    - \u003cxsl:value-of select\u003d\".\" /\u003e\n  \u003c/xsl:template\u003e\n\n\u003c/xsl:stylesheet\u003e\n"
+      },
+      "displayName": "xsl",
+      "inputOutputType": "IN"
+    },
+    {
+      "key": "`ExecutionMode`",
+      "dataType": "STRING_VALUE",
+      "defaultValue": {
+        "stringValue": ""
+      },
+      "displayName": "`ExecutionMode`",
+      "isTransient": true
+    },
+    {
+      "key": "`ErrorInfo`",
+      "dataType": "JSON_VALUE",
+      "defaultValue": {
+        "jsonValue": "{\n  \"message\": \"\",\n  \"code\": 0.0\n}"
+      },
+      "displayName": "`ErrorInfo`",
+      "isTransient": true,
+      "jsonSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"number\"\n    },\n    \"message\": {\n      \"type\": \"string\"\n    }\n  }\n}"
+    },
+    {
+      "key": "`ExecutionId`",
+      "dataType": "STRING_VALUE",
+      "defaultValue": {
+        "stringValue": ""
+      },
+      "displayName": "`ExecutionId`",
+      "isTransient": true
+    },
+    {
+      "key": "`IntegrationName`",
+      "dataType": "STRING_VALUE",
+      "defaultValue": {
+        "stringValue": ""
+      },
+      "displayName": "`IntegrationName`",
+      "isTransient": true
+    },
+    {
+      "key": "`Region`",
+      "dataType": "STRING_VALUE",
+      "defaultValue": {
+        "stringValue": ""
+      },
+      "displayName": "`Region`",
+      "isTransient": true
+    },
+    {
+      "key": "`ProjectId`",
+      "dataType": "STRING_VALUE",
+      "defaultValue": {
+        "stringValue": ""
+      },
+      "displayName": "`ProjectId`",
+      "isTransient": true
+    },
+    {
+      "key": "firstNodeName",
+      "dataType": "STRING_VALUE",
+      "defaultValue": {
+        "stringValue": ""
+      },
+      "displayName": "firstNodeName",
+      "inputOutputType": "OUT"
+    },
+    {
+      "key": "CloudPubSubMessage",
+      "dataType": "JSON_VALUE",
+      "displayName": "CloudPubSubMessage",
+      "isTransient": true,
+      "producer": "2_2",
+      "jsonSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-04/schema#\",\n  \"type\": \"object\",\n  \"title\": \"Cloud Pub/Sub Message\",\n  \"description\": \"Message received by Cloud Pub/Sub.\",\n  \"properties\": {\n    \"data\": {\n      \"type\": \"string\",\n      \"description\": \"The message data sent by the publisher\"\n    },\n    \"attributes\": {\n      \"type\": \"object\",\n      \"description\": \"Attributes for this message\"\n    },\n    \"messageId\": {\n      \"type\": \"string\",\n      \"description\": \"ID of this message, assigned by the server when the message is published. Guaranteed to be unique within the topic.\"\n    },\n    \"publishTime\": {\n      \"type\": \"string\",\n      \"description\": \"The time at which the message was published, populated by the server when it receives the topics.publish call\"\n    },\n    \"orderingKey\": {\n      \"type\": \"string\",\n      \"description\": \"Identifies related messages for which publish order should be respected.\"\n    }\n  }\n}"
+    },
+    {
+      "key": "dataJson",
+      "dataType": "STRING_VALUE",
+      "displayName": "dataJson",
+      "inputOutputType": "IN_OUT"
+    },
+    {
+      "key": "mediaLink",
+      "dataType": "STRING_VALUE",
+      "displayName": "mediaLink",
+      "inputOutputType": "IN_OUT"
+    },
+    {
+      "key": "execution_id",
+      "dataType": "STRING_VALUE",
+      "displayName": "execution_id",
+      "inputOutputType": "IN_OUT"
+    },
+    {
+      "key": "idParts",
+      "dataType": "STRING_ARRAY",
+      "displayName": "idParts"
+    },
+    {
+      "key": "idPartsSize",
+      "dataType": "INT_VALUE",
+      "displayName": "idPartsSize"
+    },
+    {
+      "key": "idPartsLast",
+      "dataType": "INT_VALUE",
+      "displayName": "idPartsLast"
+    },
+    {
+      "key": "extension-of-uploaded-file",
+      "dataType": "STRING_VALUE",
+      "displayName": "extension-of-uploaded-file",
+      "inputOutputType": "IN_OUT"
+    },
+    {
+      "key": "`Task_5_connectorInputPayload`",
+      "dataType": "JSON_VALUE",
+      "displayName": "`Task_5_connectorInputPayload`",
+      "producer": "1_5",
+      "jsonSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"Bucket\": {\n      \"type\": \"string\",\n      \"description\": \"Bucket name where the object is located.\"\n    },\n    \"ObjectFilePath\": {\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"Object name for the object that should be retrieved. If not specified, all the objects from the specified bucket will be retrieved.\"\n    },\n    \"HasBytes\": {\n      \"type\": [\"boolean\", \"null\"],\n      \"description\": \"Whether to download content as bytes.\",\n      \"default\": false\n    },\n    \"UpdatedEndDate\": {\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"The end of the date range to download objects. If not specified, objects will be downloaded from the specified UpdatedStartDate until the present day.\"\n    },\n    \"UpdatedStartDate\": {\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"The start of the date range to download objects. If not specified, objects will be downloaded from the beginning of the time until the UpdatedEndDate.\"\n    }\n  },\n  \"required\": [\"Bucket\"]\n}"
+    },
+    {
+      "key": "`Task_5_connectorOutputPayload`",
+      "dataType": "JSON_VALUE",
+      "displayName": "`Task_5_connectorOutputPayload`",
+      "isTransient": true,
+      "producer": "1_5",
+      "jsonSchema": "{\n  \"type\": \"array\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"items\": {\n    \"type\": \"object\",\n    \"properties\": {\n    },\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n  }\n}"
+    },
+    {
+      "key": "`Task_8_responseHeader`",
+      "dataType": "STRING_VALUE",
+      "displayName": "`Task_8_responseHeader`",
+      "isTransient": true,
+      "producer": "1_8"
+    },
+    {
+      "key": "`Task_8_responseBody`",
+      "dataType": "STRING_VALUE",
+      "displayName": "`Task_8_responseBody`",
+      "isTransient": true,
+      "producer": "1_8"
+    },
+    {
+      "key": "`Task_8_responseStatus`",
+      "dataType": "STRING_VALUE",
+      "displayName": "`Task_8_responseStatus`",
+      "isTransient": true,
+      "producer": "1_8"
+    },
+    {
+      "key": "targetUri",
+      "dataType": "STRING_VALUE",
+      "displayName": "targetUri",
+      "inputOutputType": "IN_OUT"
+    }
+  ],
+  "integrationConfigParameters": [
+    {
+      "parameter": {
+        "key": "`CONFIG_first-node-name-xsl`",
+        "dataType": "STRING_VALUE",
+        "defaultValue": {
+          "stringValue": "\u003cxsl:stylesheet version\u003d\"1.0\" xmlns:xsl\u003d\"http://www.w3.org/1999/XSL/Transform\"\u003e\n  \u003cxsl:output method\u003d\"text\" omit-xml-declaration\u003d\"yes\" indent\u003d\"no\"/\u003e\n  \u003cxsl:template match\u003d\"/*\"\u003e\n    \u003cxsl:value-of select\u003d\"local-name()\"/\u003e\n  \u003c/xsl:template\u003e\n\u003c/xsl:stylesheet\u003e\n"
+        },
+        "displayName": "`CONFIG_first-node-name-xsl`"
+      },
+      "value": {
+        "stringValue": "\u003cxsl:stylesheet version\u003d\"1.0\" xmlns:xsl\u003d\"http://www.w3.org/1999/XSL/Transform\"\u003e\n  \u003cxsl:output method\u003d\"text\" omit-xml-declaration\u003d\"yes\" indent\u003d\"no\"/\u003e\n  \u003cxsl:template match\u003d\"/*\"\u003e\n    \u003cxsl:value-of select\u003d\"local-name()\"/\u003e\n  \u003c/xsl:template\u003e\n\u003c/xsl:stylesheet\u003e\n"
+      }
+    },
+    {
+      "parameter": {
+        "key": "`CONFIG_xslt-circle-uri`",
+        "dataType": "STRING_VALUE",
+        "defaultValue": {
+          "stringValue": "@@XSLT_CIRCLE_URI@@"
+        },
+        "displayName": "`CONFIG_xslt-circle-uri`"
+      },
+      "value": {
+        "stringValue": "@@XSLT_CIRCLE_URI@@"
+      }
+    },
+    {
+      "parameter": {
+        "key": "`CONFIG_xslt-claims-uri`",
+        "dataType": "STRING_VALUE",
+        "defaultValue": {
+          "stringValue": "@@XSLT_CLAIMS_URI@@"
+        },
+        "displayName": "`CONFIG_xslt-claims-uri`"
+      },
+      "value": {
+        "stringValue": "@@XSLT_CLAIMS_URI@@"
+      }
+    }
+  ]
+}

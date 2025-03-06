@@ -26,8 +26,6 @@ env_vars_to_check=(
   "BUCKET_NAME"
 )
 
-beginswith() { case $2 in "$1"*) true;; *) false;; esac; }
-
 remove_service_accounts() {
   local sa found_saccts SA_NAME_PATTERN
   SA_NAME_PATTERN="${SERVICE_ROOT}-"

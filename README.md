@@ -170,11 +170,12 @@ an extension object defined in C#:
 - [the gcloud cli](https://cloud.google.com/sdk/docs/install-sdk)
 
 
-## Building the demonstrations
+## Building the demonstrations (locally)
 
-Open a terminal window.
+Open a terminal window on your workstation, and `cd` to the directory containing
+the content from this repo.
 
-To build each of [circle](./circle), [claims-simple](./claims-simple), and
+To locally build each of [circle](./circle), [claims-simple](./claims-simple), and
 [claims-with-rules](./claims-with-rules), cd into the appropriate directory and
 execute `dotnet build`. This will build one particular service.
 
@@ -211,7 +212,7 @@ TARGET=local ./sendOne.sh
 
 You will see output like the following:
 ```
-TARGET=local...
+TARGET=local
 Selected file ./sampledata/claim2.xml
 
 input:
@@ -259,12 +260,19 @@ The settings are:
 ```sh
 export PROJECT=my-gcp-project
 export REGION=us-west1
+export EMAIL_ADDR=email@example.org
+
 export SERVICE_ROOT=xslt-svc
-export BUCKET_NAME=xslt-svc-config
+export APPCONFIG_BUCKET=xslt-svc-config
+export UPLOAD_BUCKET=xml-drop-zone
+export PUBSUB_TOPIC=xml-input
 ```
 
-You can leave the `SERVICE_ROOT` and `BUCKET_NAME` as is, but the `PROJECT` and
-`REGION` you will want to set to something appropriate for you.
+You will want to set the `PROJECT`,
+`REGION`, and `EMAIL_ADDR` to something appropriate for you.
+You may wish to leave the other things as 
+they are.
+
 
 Once you have modified that file, open a terminal, and _source_ it, then run the
 deploy script:
@@ -289,7 +297,7 @@ so on... And then, finally, it runs `gcloud run deploy` to deploy the .NET
 XSLT service, from source code, into Cloud Run.
 
 
-To invoke a service, sending a randomly selected input data payload:
+To invoke any of the services running in Cloud Run, sending a randomly selected input data payload:
 
 ```sh
 ./sendOne.sh circle
@@ -322,7 +330,7 @@ content-length: 192
 </claims>
 ```
 
-## Invoking that service from Application Integration
+## Invoking the services from Application Integration
 
 It's handy to be able to stitch together a variety of services into a single,
 coherent sequence.  Google Cloud [Application
