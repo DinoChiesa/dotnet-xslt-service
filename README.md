@@ -1,9 +1,16 @@
-# XSLT Processing using .NET in Google Cloud Run
+# XSLT Processing using .NET in Google Cloud Run and Application Integration
 
 This is an example of a Cloud Run service. This service implemented in C#, and
 runs on .NET 8.0, and exposes a minimal Web API - effectively it is a
 microservice. The primary function of this service is to perform XSL Transforms
-via [XSLT](https://en.wikipedia.org/wiki/XSLT).
+via [XSLT](https://en.wikipedia.org/wiki/XSLT). It accepts an XML payload on
+input over HTTP POST, performs the transform  via [the
+XSLCompiledTransform
+class](https://learn.microsoft.com/en-us/dotnet/api/system.xml.xsl.xslcompiledtransform?view=net-8.0),
+and then sends back a transformed XML document as a response.
+
+You can invoke this service directly via curl, or you can access the service
+from within an Integration, running in Google Cloud Integration.
 
 ## Disclaimer
 
@@ -12,7 +19,17 @@ official Google product.
 
 ## Purpose
 
-Performing XSLT within C# is not rocket science.  Why does this example exist? 
+Performing XSLT within C# is not rocket science.  A minimal web API is also not
+rocket science. Why does this example exist?
+
+The goal is to illustrate the use of a combination of technologies all together.
+This example is novel because it combines these elements:
+- a .NET minimal Web API
+- performing XSLT
+- which itself references a separate C# class
+- which uses a business rules engine
+- running as a Cloud Run service in Google Cloud
+
 
 I began exploring this after connecting with several different companies who
 observed that they were performing XSLT using a different engine, which was
@@ -28,13 +45,8 @@ object"](https://learn.microsoft.com/en-us/dotnet/api/system.xml.xsl.xsltargumen
 which allows similar capability but without the aspect of co-mingling C# code
 and XSLT in one file, as you can do when using `msxsl:script`. To use an
 Extension object, you encapsulate your C# code in a separately-compiled
-assembly, and then reference the object when the XslTransform is instantiated.
+assembly, and then reference the object when the XslCompiledTransform is executed.
 
-So, the reason this example exists is to illustrate this combination:
-- a .NET minimal Web API
-- running as a Cloud Run service in Google Cloud
-- performing XSLT
-- which itself references a separate C# class
 
 ## In a Little More Detail
 
@@ -73,13 +85,12 @@ And by applying that transform to the appropriate XML input file, the transform
 can invoke the C# code to perform the calculation. Of course the C# code can do
 ... anything. It's not limited to arithmetic. Once the code gets beyond a few
 lines, though, it seems inelegant to co-mingle the C# with the XSL. For
-quick/dirty solution, script blocks will work great. For use within a larger
-company or enterprise, you really want to manage distinct bits of code in
+a quick & dirty solution, script blocks will work great. For use within a larger
+company or enterprise, you really want to manage distinct parcels of code in
 separate files, possibly or probably in separate source code repos.
 
 The Extension Block approach allows that.  With Extension blocks, you can  do
 something similar. The XSLT is like so:
-
 
 ```xml
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -131,7 +142,7 @@ And to use that code, you need to refer to an instance of that object when you e
           xslt.Transform(doc, xslArglist, xmlWriter);
 ```      
 
-This repo shows a variety of options for demonstrating this capability.
+This repo shows a a few different options for demonstrating variations on this idea.
 
 ## Demonstrations included here
 
@@ -163,30 +174,226 @@ an extension object defined in C#:
 
 Open a terminal window.
 
-To build each of [circle](./circle), 
- [claims-simple](./claims-simple), and
- [claims-with-rules](./claims-with-rules), cd into the appropriate directory and
- execute `dotnet build`.
+To build each of [circle](./circle), [claims-simple](./claims-simple), and
+[claims-with-rules](./claims-with-rules), cd into the appropriate directory and
+execute `dotnet build`. This will build one particular service.
 
-To run, execute `dotnet run`.
+To run one service, execute `dotnet run` from within the same directory.
 
 Each service listens by default on localhost:9090.  Because they all use the
 same port, you can run just one of these services at a time on your local
 workstation.
 
-## Sending data into the service
+## Sending sample requests into the service running locally
 
 You can use the curl command to send a request any of the services.
+Open a new terminal and use this:
+
 ```sh
+ENDPINT=0:9090
 curl -i -X POST -H content-type:application/xml \
   ${ENDPOINT}/xml \
   --data-binary @"${randomfile}"
 ```
 
-The `ENDPOINT` should be 
-Use the 
+The `ENDPOINT` should be `0:9090` to connect with the service running locally. 
+
+The file you send can be one of the XML files in the sampledata directory in
+each of the subdirectories.
+
+There's a [sendOne.sh](./sendOne.sh) script that can help you; it selects a
+random file and sends it to the service with a curl command.
+
+To use it:
+```sh
+TARGET=local ./sendOne.sh
+```
+
+You will see output like the following:
+```
+TARGET=local...
+Selected file ./sampledata/claim2.xml
+
+input:
+<claims>
+  <claim>
+    <procedureCode>142007</procedureCode>
+    <patientId>ABC-123</patientId>
+    <amount>287.05</amount>
+  </claim>
+</claims>
+
+sending to target: 0:9090
+
+output:
+HTTP/1.1 200 OK
+Content-Length: 237
+Content-Type: text/plain; charset=utf-8
+Date: Wed, 05 Mar 2025 21:58:38 GMT
+Server: Kestrel
+Build-Time: 2025-03-05T21:02:53.3949997Z
+service: claims-xslt-service-with-rules xx
+
+<claims>
+  <claim>
+    <id>21</id>
+    <amount>287.05</amount>
+    <procedureCode>142007</procedureCode>
+    <patientId>ABC-123</patientId>
+    <isApproved>true</isApproved>
+    <note>approved (with surcharge)</note>
+  </claim>
+</claims>
+```
+
+The input shows a sample claim in XML format. The response shows that the claim
+was approved with a surcharge.
+
+## Deploying to Cloud Run
+
+You can also deploy any or all of the examples to Google Cloud Run in your GCP
+Project.
+
+To do so, first open a text editor and modify the settings in the env.sh file.
+The settings are:
+```sh
+export PROJECT=my-gcp-project
+export REGION=us-west1
+export SERVICE_ROOT=xslt-svc
+export BUCKET_NAME=xslt-svc-config
+```
+
+You can leave the `SERVICE_ROOT` and `BUCKET_NAME` as is, but the `PROJECT` and
+`REGION` you will want to set to something appropriate for you.
+
+Once you have modified that file, open a terminal, and _source_ it, then run the
+deploy script:
+
+```sh
+source ./env.sh
+./deploy-service.sh circle
+```
+
+To deploy all three:
+
+```sh
+source ./env.sh
+./deploy-service.sh circle
+./deploy-service.sh claims-simple
+./deploy-service.sh claims-with-rules
+```
+
+The deploy script does some housekeeping - creates a service account, assigns
+roles to it, creates a Cloud Storage bucket, copies files into the bucket, and
+so on... And then, finally, it runs `gcloud run deploy` to deploy the .NET
+XSLT service, from source code, into Cloud Run.
+
+
+To invoke a service, sending a randomly selected input data payload:
+
+```sh
+./sendOne.sh circle
+./sendOne.sh claims-simple
+./sendOne.sh claims-with-rules
+```
+
+In all cases you should see a happy message back from the remote
+service. Something like the following:
+
+```
+output:
+HTTP/2 200
+content-type: text/plain; charset=utf-8
+build-time: 2025-03-06T03:06:40.5450124Z
+service: claims-xslt-service xslt-svc-claims-simple-00003-dkn
+x-cloud-trace-context: ade35adcad9136fafb6387f01c894dda;o=1
+date: Thu, 06 Mar 2025 03:37:01 GMT
+server: Google Frontend
+content-length: 192
+
+<claims>
+  <claim>
+    <id>1</id>
+    <amount>190.5</amount>
+    <procedureCode>142007</procedureCode>
+    <patientId>ABC-123</patientId>
+    <isApproved>true</isApproved>
+  </claim>
+</claims>
+```
+
+## Invoking that service from Application Integration
+
+It's handy to be able to stitch together a variety of services into a single,
+coherent sequence.  Google Cloud [Application
+Integration](https://cloud.google.com/application-integration/docs/overview) is
+a purpose-build integration platform as a service that fills that purpose.
+
+ONE of the things it can do is invoke REST services, as part of an integration
+or flow. For example, a simple integration might receive an XML file, perhaps a
+Claims file, after it's been dropped into a Google Cloud Storage bucket via SFTP
+transfer.  The integration might validate the file, then invoke the XSLT
+service, then drop the resulting transformed file into another bucket, or send
+it along to another service.
+
+This flow might look like this:
+
+![flow image here](./images/TBD)
 
 
 
- 
+TBD - finish this part. 
+
+
+
+## Support
+
+This callout is open-source software, and is not a supported part of the Google
+Cloud Platform.  If you need assistance, you can try inquiring on [the Google
+Cloud Community forum dedicated to Application
+Integration](https://goo.gle/appint-community) There is no service-level
+guarantee for responses to inquiries posted to that site.
+
+## License
+
+The material is [Copyright 2024-2025 Google LLC](./NOTICE).
+and is licensed under the [Apache 2.0 License](LICENSE). This includes the C#
+code as well as the all of the automation scripts.
+
+
+## Bugs
+
+1. The `gcloud run deploy` command, within the
+   [deploy-service.sh](./deploy-service.sh) script, by design, allows all
+   unauthenticated access.  In some cases, if you have "Domain Restricted
+   sharing" enabled on your GCP Project, the deployment will succeed, but the
+   subsequent modification of the access rights will fail.
+
+   There are some workarounds:
+
+   a. Disable Domain Restricted Sharing
+      ([how-to](https://thefridaydeploy.substack.com/p/how-to-fix-domain-restricted-sharing)).
+      This may or may not be acceptable or advisable. Proceed with care.
+      
+   b. Send an Identity token with each request to the Cloud Run services.
+      To set that up you must use something like:
+      ```sh
+      gcloud run services add-iam-policy-binding SERVICE_NAME \
+          --member="user:USER_EMAIL" --role='roles/run.invoker' \
+          --region "${REGION}"--project "$PROJECT"
+      ```
+      
+      Where `SERVICE_NAME` is one of: {xslt-svc-circle, xslt-svc-claims-simple,
+      xslt-svc-claims-with-rules }. This allows a specific user to invoke the
+      cloud run service. You then need to invoke the service with an identity
+      token in the Authorization header:
+      
+      ```sh
+      curl -i -X POST -H content-type:application/xml \
+        -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+        ${ENDPOINT}/xml \
+        --data-binary @"${randomfile}"
+      ```
+
+
 

@@ -1,9 +1,6 @@
 # variables you can change if you like
-PROJECT=dchiesa-argolis-2
-SERVICE_ACCOUNT=xslt-service
-REGION=us-west1
-SERVICE=xslt-service
-BUCKET_NAME=dchiesa-xslt-service-config
+export PROJECT=my-gcp-project
+export REGION=us-west1
+export SERVICE_ROOT=xslt-svc
+export BUCKET_NAME=xslt-svc-config
 
-# derived variables
-SA_EMAIL="${SERVICE_ACCOUNT}@${PROJECT}.iam.gserviceaccount.com"

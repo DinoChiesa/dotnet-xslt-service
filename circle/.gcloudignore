@@ -1,0 +1,16 @@
+# Specify files that gcloud should ignore,  not  upload to Google Cloud Platform
+#
+# For more information, run:
+#   $ gcloud topic gcloudignore
+#
+.gcloudignore
+.gitignore
+bin
+obj
+*.*~
+
+sendOne.sh
+
+.remote-endpoint-*
+
+sampledata

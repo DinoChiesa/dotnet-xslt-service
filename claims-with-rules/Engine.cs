@@ -13,11 +13,6 @@
 // limitations under the License.
 //
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Dynamic;
-using System.IO;
 using System.Text.Json;
 using ClaimsXsltDemo;
 using RulesEngine.Models;

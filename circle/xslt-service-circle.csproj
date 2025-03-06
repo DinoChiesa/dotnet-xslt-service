@@ -13,19 +13,41 @@
     <PackageReference Include="cmdwtf.BuildTimestampGenerator" Version="1.0.1" PrivateAssets="all" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Include="..\common\ResponseMiddleware.cs">
-      <Link>ResponseMiddleware.cs</Link>
-    </Compile>
-    <Compile Include="..\common\XsltWebApp.cs">
-      <Link>XsltWebApp.cs</Link>
-    </Compile>
-  </ItemGroup>
+  <!--
+      There are some linked files in the build. These are re-used across
+      multiple projects. The `gcloud run deploy` command does not handle those
+      automatically.  So when using that, we need to copy the linked files,
+      then `gcloud run deploy` , then remove the files.  If we do it that way,
+      then we do not want the build in google cloud to try to resolve these
+      linked files - the targets of the links won't exist, but the files
+      will be present anyway.  So this condition handles that.
+  -->
+  <Choose>
+    <!-- https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-conditions?view=vs-2019 -->
+    <When Condition=" '$(GCLOUD_BUILD)'!='1' ">
+      <ItemGroup>
+        <Compile Include="../common/ResponseMiddleware.cs">
+          <Link>ResponseMiddleware.cs</Link>
+        </Compile>
+        <Compile Include="../common/XsltWebApp.cs">
+          <Link>XsltWebApp.cs</Link>
+        </Compile>
+      </ItemGroup>
+    </When>
+  </Choose>
 
   <Target Name="PublishAdditionalFiles" AfterTargets="Publish">
-    <!-- Need the stylesheet1.xsl file to be readable by the container after build. -->
+    <!--
+        We need the stylesheet file to be readable by the container after
+        build. This will be effective if APP_CONFIG is NOT set; in that case the
+        app tries to read from its home directory.  If you set APP_CONFIG, then
+        it reads from the directory specified in the env variable.  When this
+        app is deployed to Cloud run using the "deploy.sh" script used here,
+        APP_CONFIG points to a GCS bucket that is mounted as a filesystem, so
+        this copy is... not actually needed.
+    -->
     <ItemGroup>
-      <ResourceFiles Include="$(ProjectDir)\stylesheet1.xsl" />
+      <ResourceFiles Include="$(ProjectDir)\stylesheet-circle.xsl" />
     </ItemGroup>
     <!-- not sure which of these i need -->
     <Copy SourceFiles="@(ResourceFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="false" />

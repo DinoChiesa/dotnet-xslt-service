@@ -17,14 +17,14 @@ namespace ClaimsXsltDemo;
 
 public static class Program
 {
-    private const String DEFAULT_STYLESHEET = "stylesheet1.xsl";
+    private const String DEFAULT_STYLESHEET = "stylesheet-claims.xsl";
     private const String SERVICE_NAME = "claims-xslt-service";
 
     public static void Main(string[] args)
     {
         try
         {
-            Console.Error.WriteLine($"${SERVICE_NAME} Starting up...");
+            Console.Error.WriteLine($"{SERVICE_NAME} Starting up...");
             String buildTime = cmdwtf.BuildTimestamp.BuildTimeUtc.ToString(
                 "o",
                 System.Globalization.CultureInfo.InvariantCulture

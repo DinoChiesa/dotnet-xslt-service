@@ -1,1 +1,0 @@
-DATAKEY=claim ./sendOne.sh
