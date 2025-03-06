@@ -29,23 +29,29 @@ This example is novel because it combines these elements:
 - which itself references a separate C# class
 - which uses a business rules engine
 - running as a Cloud Run service in Google Cloud
+- invoked by an Integration
+- triggered by a file upload to Google Cloud Storage
 
+It covers a lot of ground, and I hope it's interesting for people.
+
+## Background
 
 I began exploring this after connecting with several different companies who
 observed that they were performing XSLT using a different engine, which was
-reaching end-of-life . And they wanted to explore alternatives.  Some of these
-companies were using some vendor-specific extensions to XSLT - notably
+reaching end-of-life. And they wanted to explore alternatives. At least one of these
+companies was using some vendor-specific extensions to XSLT - notably Microsoft's
 [msxsl:script](https://learn.microsoft.com/en-us/dotnet/standard/data/xml/script-blocks-using-msxsl-script),
 which allows you to embed C# code directly into an XSLT, and invoke it from
-within any of the templates.  On .NET, that feature is not supported; it
-requires the .NET Framework.
+within any of the templates. On .NET, that feature is not supported; it
+requires the .NET Framework. If you're using the free .NET platform on Linux, you
+can't use that feature.
 
-This example illustrates the use of something called an ["Extension
+_This example_ illustrates the use of something called an ["Extension
 object"](https://learn.microsoft.com/en-us/dotnet/api/system.xml.xsl.xsltargumentlist.addextensionobject?view=net-8.0)
 which allows similar capability but without the aspect of co-mingling C# code
 and XSLT in one file, as you can do when using `msxsl:script`. To use an
 Extension object, you encapsulate your C# code in a separately-compiled
-assembly, and then reference the object when the XslCompiledTransform is executed.
+assembly, and then reference the object within the XSLT when the XslCompiledTransform is executed.
 
 
 ## In a Little More Detail
@@ -89,7 +95,7 @@ a quick & dirty solution, script blocks will work great. For use within a larger
 company or enterprise, you really want to manage distinct parcels of code in
 separate files, possibly or probably in separate source code repos.
 
-The Extension Block approach allows that.  With Extension blocks, you can  do
+The Extension Block approach allows that.  With Extension blocks, you can do
 something similar. The XSLT is like so:
 
 ```xml
@@ -112,7 +118,7 @@ something similar. The XSLT is like so:
 
 But in this case, the C# code is managed in an independent module:
 
-```
+```csharp
 namespace XsltEngineDemo;
 
 public class ExtObject
@@ -129,7 +135,7 @@ public class ExtObject
 
 And to use that code, you need to refer to an instance of that object when you execute the transform:
 
-```
+```csharp
       XslCompiledTransform xslt = new XslCompiledTransform();
       xslt.Load(xsltFilename, null /* xsltSettings */, new XmlUrlResolver());
 
@@ -143,6 +149,9 @@ And to use that code, you need to refer to an instance of that object when you e
 ```      
 
 This repo shows a a few different options for demonstrating variations on this idea.
+And then extends that by running the services in Google Cloud - Cloud Run is so easy!
+And then extends _that_ idea by invoking those services from an Integration.
+
 
 ## Demonstrations included here
 
