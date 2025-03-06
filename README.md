@@ -191,7 +191,7 @@ You can use the curl command to send a request any of the services.
 Open a new terminal and use this:
 
 ```sh
-ENDPINT=0:9090
+ENDPOINT=0:9090
 curl -i -X POST -H content-type:application/xml \
   ${ENDPOINT}/xml \
   --data-binary @"${randomfile}"
@@ -329,6 +329,23 @@ content-length: 192
   </claim>
 </claims>
 ```
+
+### Using Curl to invoke the remote service
+
+You can also use the curl command to send a request any of the services running remotely.
+Within a terminal you need to inquire the URI for the service, then use that
+URI.  For example, for the circle service:
+
+```sh
+SERVICE="${SERVICE_ROOT}-circle"
+ENDPOINT=$(gcloud run services describe "${SERVICE}" --region "${REGION}" --project="${PROJECT}" --format 'value(status.url)')
+data_files=(./circle/*.xml)
+selected_file="${data_files[$((RANDOM % ${#data_files[@]}))]}"
+curl -i -X POST -H content-type:application/xml \
+  ${ENDPOINT}/xml \
+  --data-binary @"${selected_file}"
+```
+
 
 ## Invoking the services from Application Integration
 
