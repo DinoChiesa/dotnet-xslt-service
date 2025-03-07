@@ -153,6 +153,13 @@ This repo shows a a few different options for demonstrating variations on this i
 And then extends that by running the services in Google Cloud - Cloud Run is so easy!
 And then extends _that_ idea by invoking those services from an Integration.
 
+## Screencast Walkthrough
+
+Here is a 30-minute [screencast walkthrough](https://www.youtube.com/watch?v=3JLp1_6CTDU) of
+this sample. (I recommend watching it at 1.5x speed if your ears are fast.)
+
+[![screenshot](./images/screenshot-of-video-2025-03-06.png)](https://www.youtube.com/watch?v=3JLp1_6CTDU)
+
 
 ## Demonstrations included here
 
