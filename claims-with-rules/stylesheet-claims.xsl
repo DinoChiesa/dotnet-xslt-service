@@ -32,7 +32,7 @@
           <xsl:apply-templates
               select="ext:ProcessClaim(./procedureCode,./amount,./patientId)"/>
         </xsl:for-each>
-          <xsl:call-template name="newline"/>
+        <xsl:call-template name="newline"/>
       </claims>
     </xsl:if>
   </xsl:template>
