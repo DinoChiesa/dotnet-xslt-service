@@ -70,7 +70,6 @@ public class ClaimsProcessor
             xmlns.Add("", "");
             xmlSerializer.Serialize(textWriter, claim, xmlns);
             responseContent = textWriter.ToString();
-            //Console.WriteLine($" xml content: {responseContent}");
         }
 
         XmlDocument doc = new XmlDocument();
