@@ -442,7 +442,8 @@ then:
   That will select a random XML file and drop it into the GCS upload bucket.
   You should see an email at the email address you configured in your env.sh file.
 
-
+  In my case it looks like this:
+  ![email screenshot](./images/email-screenshot-2025-03-06.png)
 
 ## Teardown and cleanup
 
@@ -478,6 +479,12 @@ code as well as the all of the automation scripts.
 
 
 ## Bugs
+
+0. This README does not provide a description of the manual steps needed
+   to deploy these examples, including: creating service accounts, setting roles,
+   creating buckets, creating pubsub notifications on buckets, creating connectors,
+   and so on.  If  you've read this far, and you REALLY want that, let me know.
+   Today the workaorund is: read the scripts! 
 
 1. The `gcloud run deploy` command, within the
    [build-and-deploy-service.sh](./build-and-deploy-service.sh) script, by design,
