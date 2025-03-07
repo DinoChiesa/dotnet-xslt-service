@@ -487,13 +487,20 @@ code as well as the all of the automation scripts.
 
 ## Bugs
 
-0. This README does not provide a description of the manual steps needed
+1. The services here are configured to allow unauthenticated access, including
+   from outside the protected network. This is obviously an insecure configuration,
+   and you're not going to want to keep those services up and running, beyond
+   the exploration you conduct. You can modify the setup to NOT allow unauthenticated
+   access to the services. If anyone would like to propose changes in this repo to
+   support that, I'd be happy to review a PR.
+
+2. This README does not provide a description of the manual steps needed
    to deploy these examples, including: creating service accounts, setting roles,
    creating buckets, creating pubsub notifications on buckets, creating connectors,
    and so on.  If  you've read this far, and you REALLY want that, let me know.
    Today the workaorund is: read the scripts! 
 
-1. The `gcloud run deploy` command, within the
+3. The `gcloud run deploy` command, within the
    [build-and-deploy-service.sh](./build-and-deploy-service.sh) script, by design,
    allows all unauthenticated access to the service, after it is built. In some cases,
    if you have "Domain Restricted sharing" enabled on your GCP Project, the deployment
@@ -525,7 +532,7 @@ code as well as the all of the automation scripts.
         --data-binary @"${randomfile}"
       ```
 
-2. When deploying to cloud run, the deployment script copies the appsettings.json file
+4. When deploying to cloud run, the deployment script copies the appsettings.json file
    for each service to the APPCONFIG bucket. This overwrites any previous copy of that
    file. Coincidentally the appsettings.json is identical among the three services
    but if any of them should need a different file, there will be contention. The fix
