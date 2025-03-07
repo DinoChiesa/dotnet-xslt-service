@@ -421,7 +421,7 @@ then:
 
 - check and maybe create the GCS connector
   ```sh
-  source ./env..sh
+  source ./env.sh
   ./check-and-maybe-create-gcs-connector.sh
   ```
   If that script creates a new connector, you will have to wait a bit for it to
