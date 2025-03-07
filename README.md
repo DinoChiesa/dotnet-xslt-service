@@ -28,11 +28,12 @@ This example is novel because it combines these elements:
 - performing XSLT
 - which itself references a separate C# class
 - which uses a business rules engine
+- built in the cloud by Cloud build
 - running as a Cloud Run service in Google Cloud
 - invoked by an Integration
 - triggered by a file upload to Google Cloud Storage
 
-It covers a lot of ground, and I hope it's interesting for people.
+It covers a lot of ground; I hope it's interesting for people.
 
 ## Background
 
@@ -298,32 +299,44 @@ they are.
 
 
 Once you have modified that file, open a terminal, and _source_ it, then run the
-deploy script:
+build-and-deploy script:
 
 ```sh
 source ./env.sh
-./deploy-service.sh circle
+./build-and-deploy-service.sh circle
 ```
 
 To deploy all three:
 
 ```sh
 source ./env.sh
-./deploy-service.sh circle
-./deploy-service.sh claims-simple
-./deploy-service.sh claims-with-rules
+./build-and-deploy-service.sh circle
+./build-and-deploy-service.sh claims-simple
+./build-and-deploy-service.sh claims-with-rules
 ```
 
-The deploy script does some housekeeping - creates a service account, assigns
+The script does some housekeeping - creates a service account, assigns
 roles to it, creates a Cloud Storage bucket, copies files into the bucket, and
 so on... And then, finally, it runs `gcloud run deploy` to deploy the .NET
-XSLT service, from source code, into Cloud Run.  This all takes a few minutes.
+XSLT service, from source code, into Cloud Run.
 
-> Don't try to run multiple invocations of `deploy-service.sh` at once; the script
-  checks for common shared resources and it won't handle race conditions.
+When you "deploy from source" , the gcloud tool zips up the source code from the local
+directory and sends it to Google cloud, where it is built, _in the cloud_.
+This happens via Cloud Build.  Cloud Build is an independent, general purpose build
+service, but there is "magic integration" between Cloud Run and Cloud Build, such that
+if you deploy from source code, Cloud Build does the build for you.  This is described
+in detail [here](https://cloud.google.com/run/docs/deploying-source-code).
 
+> You have the option of building a docker image "manually", and deploying that
+  to Cloud Run. That would give you  more control over the build process.
 
-To invoke any of the services running in Cloud Run, use the `sendOne.sh` script .It
+This all takes a few minutes.
+
+> By The Way, don't try to run multiple invocations of `build-and-deploy-service.sh`
+  at once; the script checks for and creates common shared resources and that logic
+  wasn't designed to handle race conditions.
+
+To invoke any of the services running in Cloud Run, use the `sendOne.sh` script. It
 sends a randomly selected input data payload:
 
 ```sh
@@ -467,10 +480,10 @@ code as well as the all of the automation scripts.
 ## Bugs
 
 1. The `gcloud run deploy` command, within the
-   [deploy-service.sh](./deploy-service.sh) script, by design, allows all
-   unauthenticated access.  In some cases, if you have "Domain Restricted
-   sharing" enabled on your GCP Project, the deployment will succeed, but the
-   subsequent modification of the access rights will fail.
+   [build-and-deploy-service.sh](./build-and-deploy-service.sh) script, by design,
+   allows all unauthenticated access to the service, after it is built. In some cases,
+   if you have "Domain Restricted sharing" enabled on your GCP Project, the deployment
+   will succeed, but the subsequent modification of the access rights will fail.
 
    There are some workarounds:
 
