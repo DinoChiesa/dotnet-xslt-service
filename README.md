@@ -169,14 +169,17 @@ an extension object defined in C#:
 - [circle](./circle) - an object that performs a calculation of a
   Circle's circumference, and returns a simple result - a double - that can
   be embedded directly into the XSL output.
+  [![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?dir=circle)
 
 - [claims-simple](./claims-simple) - an extension object that checks through a
   medical claim and performs some analysis of it. It returns an XML NodeSet,
   which is embedded into the output of the XSL.
+  [![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?dir=claims-simple)
 
 - [claims-with-rules](./claims-with-rules) - an extension object that uses a
   Business Rules engine to process a medical claim. As above, it returns an XML
   NodeSet, which is embedded into the output of the XSL.
+  [![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?dir=claims-with-rules)
 
 
 ## Pre-requisites
