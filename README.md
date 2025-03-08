@@ -169,17 +169,15 @@ an extension object defined in C#:
 - [circle](./circle) - an object that performs a calculation of a
   Circle's circumference, and returns a simple result - a double - that can
   be embedded directly into the XSL output.
-  [![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?dir=circle)
 
 - [claims-simple](./claims-simple) - an extension object that checks through a
   medical claim and performs some analysis of it. It returns an XML NodeSet,
   which is embedded into the output of the XSL.
-  [![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?dir=claims-simple)
 
 - [claims-with-rules](./claims-with-rules) - an extension object that uses a
   Business Rules engine to process a medical claim. As above, it returns an XML
   NodeSet, which is embedded into the output of the XSL.
-  [![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?dir=claims-with-rules)
+
 
 
 ## Pre-requisites
@@ -188,6 +186,11 @@ an extension object defined in C#:
 - various Linux utilities like grep, jq, cat, sed, etc.
 - [dotnet 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 - [the gcloud cli](https://cloud.google.com/sdk/docs/install-sdk)
+
+
+You can get all of those in Google Cloud Shell.
+[![Clone in CloudShell](https://user-images.githubusercontent.com/1699357/33573952-bcc79140-d937-11e7-80e1-f3e8f3733624.png)]
+(https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/DinoChiesa/dotnet-xslt-service)
 
 
 ## Building the demonstrations (locally)
