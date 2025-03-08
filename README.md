@@ -190,7 +190,7 @@ an extension object defined in C#:
 
 You can get all of those in Google Cloud Shell.
 
-[![Clone in CloudShell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/open?git_repo=https://github.com/DinoChiesa/dotnet-xslt-service)
+[![Clone in CloudShell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/open?git_repo=https://github.com/DinoChiesa/dotnet-xslt-service&ephemeral=false)
 
 
 ## Building the demonstrations (locally)
