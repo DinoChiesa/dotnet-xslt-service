@@ -189,8 +189,7 @@ an extension object defined in C#:
 
 
 You can get all of those in Google Cloud Shell.
-[![Clone in CloudShell](https://user-images.githubusercontent.com/1699357/33573952-bcc79140-d937-11e7-80e1-f3e8f3733624.png)]
-(https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/DinoChiesa/dotnet-xslt-service)
+[![Clone in CloudShell](https://user-images.githubusercontent.com/1699357/33573952-bcc79140-d937-11e7-80e1-f3e8f3733624.png)](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/DinoChiesa/dotnet-xslt-service)
 
 
 ## Building the demonstrations (locally)
