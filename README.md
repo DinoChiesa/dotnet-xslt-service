@@ -181,8 +181,8 @@ an extension object defined in C#:
 
 ## Pre-requisites
 
-- for development, a Linux workstation
 - a bash shell
+- various Linux utilities like grep, jq, cat, sed, etc.
 - [dotnet 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 - [the gcloud cli](https://cloud.google.com/sdk/docs/install-sdk)
 
@@ -408,7 +408,24 @@ transfer.  The integration might validate the file, then invoke the XSLT
 service, then drop the resulting transformed file into another bucket, or send
 it along to another service.
 
-This flow might look like this:
+> This is probably worth noting: Integration can  execute an XSLT directly, via the
+Data Transformer Task, which itself uses jsonnet.  The jsonnet you would use for this
+is:
+
+> ```jsonnet
+> local f = import "functions";
+> local xml = std.extVar("xml");
+> local xsl = std.extVar("`CONFIG_my-stylesheet-xsl`");
+> {
+>   firstNodeName: f.xsltTransform(xml, xsl)
+> }
+> ```
+
+> That works great . But it cannot use Extension blocks, to call into C# code.
+> In THIS particular example I wanted to show that capability, so I did not use
+> the builtin XSLT.
+
+OK, so if we are calling out to an external service for the XSLT, the flow might look like this:
 
 ![flow image here](./images/integration-screenshot-2025-03-06.png)
 
