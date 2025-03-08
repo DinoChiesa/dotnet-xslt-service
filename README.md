@@ -192,11 +192,15 @@ You can get all of those in Google Cloud Shell.
 
 [![Clone in CloudShell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/open?git_repo=https://github.com/DinoChiesa/dotnet-xslt-service&ephemeral=false)
 
+> If you do use Cloud Shell, when the shell starts, make sure you have the
+> latest gcloud command line utility before proceding.  Run: `gcloud components
+> update`.
+
 
 ## Building the demonstrations (locally)
 
-Open a terminal window on your workstation, and `cd` to the directory containing
-the content from this repo.
+Open a terminal window on your workstation, or in Cloud Shell, and `cd` to the
+directory containing the content from this repo.
 
 To locally build each of [circle](./circle), [claims-simple](./claims-simple), and
 [claims-with-rules](./claims-with-rules), cd into the appropriate directory and
@@ -221,7 +225,7 @@ workstation.
 ## Sending sample requests into the service running locally
 
 You can use the curl command to send a request any of the services.
-_Open a new terminal_ and use this:
+_Open a new terminal window or tab_ and use this:
 
 ```sh
 cd circle
@@ -246,7 +250,6 @@ To use it:
 ```sh
 TARGET=local ./sendOne.sh
 ```
-
 
 You will see output like the following:
 ```
