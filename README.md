@@ -147,7 +147,7 @@ And to use that code, you need to refer to an instance of that object when you e
       ...
           // Execute the transformation
           xslt.Transform(doc, xslArglist, xmlWriter);
-```      
+```
 
 This repo shows a a few different options for demonstrating variations on this idea.
 And then extends that by running the services in Google Cloud - Cloud Run is so easy!
@@ -169,11 +169,11 @@ an extension object defined in C#:
 - [circle](./circle) - an object that performs a calculation of a
   Circle's circumference, and returns a simple result - a double - that can
   be embedded directly into the XSL output.
-  
+
 - [claims-simple](./claims-simple) - an extension object that checks through a
   medical claim and performs some analysis of it. It returns an XML NodeSet,
   which is embedded into the output of the XSL.
-   
+
 - [claims-with-rules](./claims-with-rules) - an extension object that uses a
   Business Rules engine to process a medical claim. As above, it returns an XML
   NodeSet, which is embedded into the output of the XSL.
@@ -227,7 +227,7 @@ curl -i -X POST -H content-type:application/xml \
   --data-binary @"${selected_file}"
 ```
 
-The `ENDPOINT` should be `0:9090` to connect with the service running locally. 
+The `ENDPOINT` should be `0:9090` to connect with the service running locally.
 
 The file you send can be one of the XML files in the sampledata directory in
 each of the subdirectories.
@@ -240,6 +240,7 @@ To use it:
 ```sh
 TARGET=local ./sendOne.sh
 ```
+
 
 You will see output like the following:
 ```
@@ -301,7 +302,7 @@ export PUBSUB_TOPIC=xml-input
 
 You will want to set the `PROJECT`,
 `REGION`, and `EMAIL_ADDR` to something appropriate for you.
-You may wish to leave the other things as 
+You may wish to leave the other things as
 they are.
 
 
@@ -393,7 +394,6 @@ curl -i -X POST -H content-type:application/xml \
   --data-binary @"${selected_file}"
 ```
 
-
 ## Invoking the services from Application Integration
 
 It's handy to be able to stitch together a variety of services into a single,
@@ -428,6 +428,10 @@ is:
 OK, so if we are calling out to an external service for the XSLT, the flow might look like this:
 
 ![flow image here](./images/integration-screenshot-2025-03-06.png)
+
+
+
+
 
 Included here in this repo is a script to set up an Integration that
 
@@ -485,8 +489,6 @@ then:
   ```
 
 
-
-
 ## Support
 
 This callout is open-source software, and is not a supported part of the Google
@@ -514,8 +516,8 @@ code as well as the all of the automation scripts.
 2. This README does not provide a description of the manual steps needed
    to deploy these examples, including: creating service accounts, setting roles,
    creating buckets, creating pubsub notifications on buckets, creating connectors,
-   and so on.  If  you've read this far, and you REALLY want that, let me know.
-   Today the workaorund is: read the scripts! 
+   and so on. If you've read this far, and you REALLY want that, let me know.
+   Today the workaorund is: read the scripts, and perform those steps manually.
 
 3. The `gcloud run deploy` command, within the
    [build-and-deploy-service.sh](./build-and-deploy-service.sh) script, by design,
@@ -528,7 +530,7 @@ code as well as the all of the automation scripts.
    a. Disable Domain Restricted Sharing
       ([how-to](https://thefridaydeploy.substack.com/p/how-to-fix-domain-restricted-sharing)).
       This may or may not be acceptable or advisable. Proceed with care.
-      
+
    b. Send an Identity token with each request to the Cloud Run services.
       To set that up you must use something like:
       ```sh
@@ -536,12 +538,12 @@ code as well as the all of the automation scripts.
           --member="user:USER_EMAIL" --role='roles/run.invoker' \
           --region "${REGION}"--project "$PROJECT"
       ```
-      
+
       Where `SERVICE_NAME` is one of: {xslt-svc-circle, xslt-svc-claims-simple,
       xslt-svc-claims-with-rules }. This allows a specific user to invoke the
       cloud run service. You then need to invoke the service with an identity
       token in the Authorization header:
-      
+
       ```sh
       curl -i -X POST -H content-type:application/xml \
         -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
